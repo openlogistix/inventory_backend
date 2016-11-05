@@ -22,13 +22,17 @@ def create_pgcurs(conn):
     return conn.cursor()
 
 def main():
+    # Set up Flask server
     server = Flask('thingy')
 
+    # Set up connection to postgres database
     pgconn = create_pgconn()
     pgcurs = create_pgcurs(pgconn)
 
+    # Define members table column names and data types
     members_cols = ('id','name','phone_no','email','years','playa_name','location','notes')
     members_cols_types = ('int','text','text','text','int','text','text','text')
+    members_table = dict(zip(members_cols,members_cols_types))
 
     @server.route('/bentest')
     def home():
@@ -52,6 +56,23 @@ def main():
 
         return  display_text + '<p><p>Headers:<p>' + request.headers.__str__().replace('\n','<p>')
 
+    def check_database_inputs(change_dict, table):
+        # TODO: database input sanitation, formatting checks on values
+
+        # Ensure that all columns in change_dict are in the table definition
+        for col in change_dict.keys():
+            if col not in table.keys():
+                return 'Column %s not found in table!' % col
+
+        # Format those columns that are text with beginning and trailing quotes,
+        #   and modify those values that are None to be null
+        for key in change_dict.keys():
+            if change_dict[key]:
+                if table[key] == 'text':
+                    change_dict[key] = '\'' + change_dict[key] + '\''
+            else:
+                change_dict[key] = 'null'
+
     @server.route('/bentest/api/v1/members/<int:id>', methods=['GET','POST','PUT','DELETE'])
     def members(id):
 
@@ -59,34 +80,25 @@ def main():
         if request.method == 'GET':
             pgcurs.execute('SELECT * FROM members WHERE id = %d' % id)
             values = pgcurs.fetchone()
-            #return jsonify(dict(zip(members_cols,values)))
-            return jsonify(values)
+            return jsonify(dict(zip(members_cols,values)))
 
-        # POST method will update the database with the new, supplied JSON for the member with that ID
-        elif request.method == 'POST':
+        # PUT method will update the members table with the new, supplied JSON for the member with that ID
+        elif request.method == 'PUT':
             try:
-                # Capture HTTP request data in JSON
-                values = json.loads(request.data)
+                # Capture HTTP request data (JSON) and load into an update dictionary
+                update_dict = json.loads(request.data)
 
                 # Ensure that the id matches
-                if id != int(values[0]):
-                    return 'ERROR: ID does not match in body and URL'
+                if id != int(update_dict['id']):
+                    return 'Error: ID does not match in body and URL'
 
-                # TODO: database input sanitation, formatting checks on values
-                
-                # Format the values so that they can be pasted into the SQL UPDATE command
-                for i, x in enumerate(values):
-                    if values[i]:
-                        if members_cols_types[i] == 'text':
-                                values[i] = '\'' + values[i] + '\''
-                    else:
-                        values[i] = 'null'
-
-                # Create dict for the SQL UPDATE command with column name, values as key, value pairs
-                update_dict = dict(zip(members_cols[1:],values[1:])) 
+                # Perform checks on dict describing values to be updated
+                inputs_check = check_database_inputs(update_dict, members_table)
+                if inputs_check:
+                    return 'Error: ' + output
 
                 # Execute and commit SQL command
-                sql ='UPDATE members\nSET\n' + ',\n'.join([x + ' = ' + str(update_dict[x]) for x in update_dict.keys()]) + '\nWHERE id = %d;' % id
+                sql = 'UPDATE members\nSET\n' + ',\n'.join([x + ' = ' + str(update_dict[x]) for x in update_dict.keys()]) + '\nWHERE id = %d;' % id
                 pgcurs.execute(sql)
                 pgconn.commit()
 
@@ -95,27 +107,29 @@ def main():
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e)
 
-        elif request.method == 'PUT':
+        # POST method will insert a row into the members table of the database with the new, supplied JSON
+        elif request.method == 'POST':
             try:
                 # Capture HTTP request data in JSON
-                values = json.loads(request.data)
+                insert_dict = json.loads(request.data)
 
                 # Ensure that the id matches TODO: what index should be used in URL?
                 #if id != int(values[0]):
                 #   return 'ERROR: ID does not match in body and URL'
 
-                # TODO: database input sanitation, formatting checks on values
-                
-                # Format the values so that they can be pasted into the SQL INSERT command
-                for i, x in enumerate(values):
-                    if values[i]:
-                        if members_cols_types[i] == 'text':
-                            values[i] = '\'' + values[i] + '\''
-                    else:
-                        values[i] = 'null'
+                # Perform checks on dict describing values to be inserted
+                inputs_check = check_database_inputs(insert_dict, members_table)
+                if inputs_check:
+                    return 'Error: ' + output
 
                 # Execute and commit SQL command
-                sql ='INSERT INTO members\n(' + ', '.join(members_cols[1:]) + ')\nVALUES\n(' + ', '.join([str(x) for x in values[1:]])  + ');'
+                keys = []
+                vals = []
+                for key in insert_dict:
+                    keys.append(key)
+                    vals.append(insert_dict[key])
+
+                sql ='INSERT INTO members\n(' + ', '.join(keys) + ')\nVALUES\n(' + ', '.join([str(x) for x in vals])  + ');'
                 pgcurs.execute(sql)
                 pgconn.commit()
 
@@ -124,12 +138,12 @@ def main():
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e)
 
+        # DELETE method will delete a row in the members table at the provided id
         elif request.method == 'DELETE':
             pgcurs.execute('DELETE FROM members WHERE id = %d' % id)
             return 'Successfully deleted member with id %d' % id
     
-
-
+    # Run the server on port 7000
     server.run('0.0.0.0',port=7000, debug=True)
 
 main()
