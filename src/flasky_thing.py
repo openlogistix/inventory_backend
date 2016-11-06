@@ -41,25 +41,13 @@ def main():
 
     @server.route('/bentest')
     def home():
-        # Load sqlite3 database
-        conn = sqlite3.connect(get_proj_path('data/') + 'testdb.db')
-        cursor = conn.cursor()
-        
-        cursor.execute('INSERT INTO requests (method, number, notes)\n VALUES (' +
-            ','.join( ['\'' + request.method + '\'', str(0), '\'notenote\'' ] ) + ');')
-        conn.commit()
 
-        display_text = ''
-        display_text += '<p>database contents:'
-        for row in cursor.execute('SELECT * FROM requests'):
-            display_text += '<p>' + '\t'.join([str(x) for x in row])
-            pass
+        display_text = """
+        <title>Test Page</title>
+        hello?! world?!...<p>
+        """
 
-        conn.close()
-
-        display_text = '<title>Test Page</title>hello?! world?!...<p>' + display_text + '<p>'
-
-        return  display_text + '<p><p>Headers:<p>' + request.headers.__str__().replace('\n','<p>')
+        return display_text + '<p><p>Headers:<p>' + request.headers.__str__().replace('\n','<p>')
 
     def check_database_inputs(change_dict, table):
         # TODO: database input sanitation, formatting checks on values
@@ -78,16 +66,22 @@ def main():
             else:
                 change_dict[key] = 'null'
 
-    @server.route('/bentest/api/v1/members/<int:id>', methods=['GET','POST','PUT','DELETE'])
+    @server.route('/bentest/api/v1/members/<int:id>', methods = ['GET','PUT','DELETE'])
     def members(id):
 
         # GET method will return the JSON for the member with that ID
         if request.method == 'GET':
+            try:
+                pgcurs.execute('SELECT * FROM members WHERE id = %d' % id)
+                values = pgcurs.fetchone()
 
-            pgcurs.execute('SELECT * FROM members WHERE id = %d' % id)
-            values = pgcurs.fetchone()
+                if not values:
+                    return 'Unsuccessful. No member with id %d found.' % id
 
-            return jsonify(dict(zip(members_cols,values)))
+                return jsonify(dict(zip(members_cols,values)))
+
+            except Exception as e:
+                return 'Unsuccessful. Error:\n' + str(e)
 
         # PUT method will update the members table with the new, supplied JSON for the member with that ID
         elif request.method == 'PUT':
@@ -114,55 +108,59 @@ def main():
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e)
 
-        # POST method will insert a row into the members table of the database with the new, supplied JSON
-        elif request.method == 'POST':
-            try:
-                # Capture HTTP request data in JSON
-                insert_dict = json.loads(request.data)
-
-                # Ensure that the id matches TODO: what index should be used in URL?
-                #if id != int(values[0]):
-                #   return 'ERROR: ID does not match in body and URL'
-
-                # Perform checks on dict describing values to be inserted
-                inputs_check = check_database_inputs(insert_dict, members_table)
-                if inputs_check:
-                    return 'Error: ' + output
-
-                # Execute and commit SQL command
-                keys = []
-                vals = []
-                for key in insert_dict:
-                    keys.append(key)
-                    vals.append(insert_dict[key])
-
-                # Execute and commit SQL command
-                sql ='INSERT INTO members\n(' + ', '.join(keys) + ')\nVALUES\n(' + ', '.join([str(x) for x in vals])  + ');'
-                pgcurs.execute(sql)
-                pgconn.commit()
-
-                return 'Successfully created member with following SQL command:\n' + sql
-
-            except Exception as e:
-                return 'Unsuccessful. Error:\n' + str(e)
-
         # DELETE method will delete a row in the members table at the provided id
         elif request.method == 'DELETE':
 
             pgcurs.execute('DELETE FROM members WHERE id = %d' % id)
 
             return 'Successfully deleted member with id %d' % id
+        
+    @server.route('/bentest/api/v1/members', methods = ['POST'])
+    def members_post():
 
-    @server.route('/bentest/api/v1/projects/<int:id>', methods=['GET','POST','PUT','DELETE'])
+        # POST method will insert a row into the members table of the database with the new, supplied JSON
+        try:
+            # Capture HTTP request data in JSON
+            insert_dict = json.loads(request.data)
+
+            # Perform checks on dict describing values to be inserted
+            inputs_check = check_database_inputs(insert_dict, members_table)
+            if inputs_check:
+                return 'Error: ' + output
+
+            # Execute and commit SQL command
+            keys = []
+            vals = []
+            for key in insert_dict:
+                keys.append(key)
+                vals.append(insert_dict[key])
+
+            # Execute and commit SQL command
+            sql ='INSERT INTO members\n(' + ', '.join(keys) + ')\nVALUES\n(' + ', '.join([str(x) for x in vals])  + ');'
+            pgcurs.execute(sql)
+            pgconn.commit()
+
+            return 'Successfully created member with following SQL command:\n' + sql
+
+        except Exception as e:
+            return 'Unsuccessful. Error:\n' + str(e)
+
+    @server.route('/bentest/api/v1/projects/<int:id>', methods = ['GET','PUT','DELETE'])
     def projects(id):
 
         # GET method will return the JSON for the project with that ID
         if request.method == 'GET':
+            try:
+                pgcurs.execute('SELECT * FROM projects WHERE id = %d' % id)
+                values = pgcurs.fetchone()
 
-            pgcurs.execute('SELECT * FROM projects WHERE id = %d' % id)
-            values = pgcurs.fetchone()
+                if not values:
+                    return 'Unsuccessful. No project with id %d found.' % id
 
-            return jsonify(dict(zip(projects_cols,values)))
+                return jsonify(dict(zip(projects_cols,values)))
+
+            except Exception as e:
+                return 'Unsuccessful. Error:\n' + str(e)
 
         # PUT method will update the projects table with the new, supplied JSON for the project with that ID
         elif request.method == 'PUT':
@@ -189,46 +187,43 @@ def main():
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e)
 
-        # POST method will insert a row into the projects table of the database with the new, supplied JSON
-        elif request.method == 'POST':
-            try:
-                # Capture HTTP request data in JSON
-                insert_dict = json.loads(request.data)
-
-                # Ensure that the id matches TODO: what index should be used in URL?
-                #if id != int(values[0]):
-                #   return 'ERROR: ID does not match in body and URL'
-
-                # Perform checks on dict describing values to be inserted
-                inputs_check = check_database_inputs(insert_dict, projects_table)
-                if inputs_check:
-                    return 'Error: ' + inputs_check
-
-                # Execute and commit SQL command
-                keys = []
-                vals = []
-                for key in insert_dict.keys():
-                    keys.append(key)
-                    vals.append(insert_dict[key])
-
-                # Execute and commit SQL command
-                sql ='INSERT INTO projects\n(' + ', '.join(keys) + ')\nVALUES\n(' + ', '.join([str(x) for x in vals])  + ');'
-                pgcurs.execute(sql)
-                pgconn.commit()
-
-                return 'Successfully created project with following SQL command:\n' + sql
-
-            except Exception as e:
-                raise
-                return 'Unsuccessful. Error:\n' + str(e)
-
         # DELETE method will delete a row in the projects table at the provided id
         elif request.method == 'DELETE':
 
             pgcurs.execute('DELETE FROM projects WHERE id = %d' % id)
 
             return 'Successfully deleted projects with id %d' % id
-    
+
+    @server.route('/bentest/api/v1/projects', methods = ['POST'])
+    def projects_post():
+
+        # POST method will insert a row into the projects table of the database with the new, supplied JSON
+        try:
+            # Capture HTTP request data in JSON
+            insert_dict = json.loads(request.data)
+
+            # Perform checks on dict describing values to be inserted
+            inputs_check = check_database_inputs(insert_dict, projects_table)
+            if inputs_check:
+                return 'Error: ' + inputs_check
+
+            # Execute and commit SQL command
+            keys = []
+            vals = []
+            for key in insert_dict.keys():
+                keys.append(key)
+                vals.append(insert_dict[key])
+
+            # Execute and commit SQL command
+            sql ='INSERT INTO projects\n(' + ', '.join(keys) + ')\nVALUES\n(' + ', '.join([str(x) for x in vals])  + ');'
+            pgcurs.execute(sql)
+            pgconn.commit()
+
+            return 'Successfully created project with following SQL command:\n' + sql
+
+        except Exception as e:
+            return 'Unsuccessful. Error:\n' + str(e)
+
     # Run the server on port 7000
     server.run('0.0.0.0',port=7000, debug=True)
 
