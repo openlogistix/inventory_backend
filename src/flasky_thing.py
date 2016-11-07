@@ -6,12 +6,6 @@ import json
 import sys
 import os
 
-def get_proj_path(path = ''):
-    curr_path = os.path.abspath(__file__)
-    path_parts = curr_path.split('/')
-    curr_path = '/' + '/'.join(path_parts[:-2]) + '/'
-    return curr_path + path
-
 def create_pgconn():
 
     # Initiate a connection to the postgres database
@@ -23,6 +17,7 @@ def create_pgcurs(conn):
     return conn.cursor()
 
 def main():
+
     # Set up Flask server
     server = Flask('secret_fire')
 
@@ -43,16 +38,17 @@ def main():
     @server.route('/bentest')
     def home():
 
+        # Create test page for /bentest
         display_text = """
         <title>Test Page</title>
         hello?! world?!...<p>
         """
 
+        # Give the headers in the HTTP response
         return display_text + '<p><p>Headers:<p>' + request.headers.__str__().replace('\n','<p>')
 
     def check_database_inputs(change_dict, table):
-        # TODO: database input sanitation, formatting checks on values
-
+        
         # Ensure that all columns in change_dict are in the table definition
         for col in change_dict.keys():
             if col not in table.keys():
@@ -91,7 +87,6 @@ def main():
                     return 'Error: ' + output
 
                 # Execute and commit SQL command
-                # TODO: incorporate this database sanitzed version into other HTTP methods and into projects HTTP methods
                 sql = 'UPDATE members\nSET\n' + ',\n'.join([x + ' = %(' + x + ')s' for x in update_dict.keys()]) + '\nWHERE id = %(id)s;'
                 pgcurs.execute( sql, update_dict )
                 pgconn.commit()
@@ -122,18 +117,12 @@ def main():
                 return 'Error: ' + inputs_check
 
             # Execute and commit SQL command
-            keys = []
-            vals = []
-            for key in insert_dict:
-                keys.append(key)
-                vals.append(insert_dict[key])
-
-            # Execute and commit SQL command
-            sql ='INSERT INTO members\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + ', '.join([str(x) for x in vals])  + ');'
-            pgcurs.execute(sql)
+            sql ='INSERT INTO members\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + \
+                ', '.join( ['%(' + x + ')s' for x in insert_dict.keys()] )  + ');'
+            pgcurs.execute(sql, insert_dict)
             pgconn.commit()
 
-            return 'Successfully created member with following SQL command:\n' + sql, 201
+            return 'Successfully created member with following SQL command:\n' + sql % insert_dict, 201
 
         except Exception as e:
             return 'Unsuccessful. Error:\n' + str(e)
@@ -159,7 +148,7 @@ def main():
         elif request.method == 'PUT':
             try:
                 # Capture HTTP request data (JSON) and load into an update dictionary
-                update_dict = json.loads(request.data)
+                update_dict = OrderedDict(json.loads(request.data))
 
                 # Ensure that the id matches
                 if id != int(update_dict['id']):
@@ -171,11 +160,11 @@ def main():
                     return 'Error: ' + inputs_check
 
                 # Execute and commit SQL command
-                sql = 'UPDATE projects\nSET\n' + ',\n'.join([x + ' = ' + str(update_dict[x]) for x in update_dict.keys()]) + '\nWHERE id = %d;' % id
-                pgcurs.execute(sql)
+                sql = 'UPDATE projects\nSET\n' + ',\n'.join([x + ' = %(' + x + ')s' for x in update_dict.keys()]) + '\nWHERE id = %(id)s;'
+                pgcurs.execute( sql, update_dict )
                 pgconn.commit()
 
-                return 'Successfully updated project with id %d' % id + ' with following SQL command:\n' + sql, 201
+                return 'Successfully updated project with following SQL command:\n' + sql % update_dict, 201
 
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e)
@@ -193,7 +182,7 @@ def main():
         # POST method will insert a row into the projects table of the database with the new, supplied JSON
         try:
             # Capture HTTP request data in JSON
-            insert_dict = json.loads(request.data)
+            insert_dict = OrderedDict(json.loads(request.data))
 
             # Perform checks on dict describing values to be inserted
             inputs_check = check_database_inputs(insert_dict, projects_table)
@@ -201,25 +190,15 @@ def main():
                 return 'Error: ' + inputs_check
 
             # Execute and commit SQL command
-            keys = []
-            vals = []
-            for key in insert_dict.keys():
-                keys.append(key)
-                vals.append(insert_dict[key])
-
-            # Execute and commit SQL command
-            sql ='INSERT INTO projects\n(' + ', '.join(keys) + ')\nVALUES\n(' + ', '.join([str(x) for x in vals])  + ');'
-            pgcurs.execute(sql)
+            sql ='INSERT INTO projects\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + \
+                ', '.join( ['%(' + x + ')s' for x in insert_dict.keys()] )  + ');'
+            pgcurs.execute(sql, insert_dict)
             pgconn.commit()
 
-            return 'Successfully created project with following SQL command:\n' + sql, 201
+            return 'Successfully created project with following SQL command:\n' + sql % insert_dict, 201
 
         except Exception as e:
             return 'Unsuccessful. Error:\n' + str(e)
-
-    # TODO: modify to be useful
-    import view_test
-    view_test.run_view_test(server)
 
     # Run the server on port 7000
     server.run('0.0.0.0',port=7000, debug=True)
