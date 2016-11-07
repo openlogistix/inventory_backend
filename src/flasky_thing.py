@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request, json
+from collections import OrderedDict
 import psycopg2
 import sqlite3
 import json
@@ -57,15 +58,6 @@ def main():
             if col not in table.keys():
                 return 'Column %s not found in table!' % col
 
-        # Format those columns that are text with beginning and trailing quotes,
-        #   and modify those values that are None to be null
-        for key in change_dict.keys():
-            if change_dict[key]:
-                if table[key] == 'text':
-                    change_dict[key] = '\'' + change_dict[key] + '\''
-            else:
-                change_dict[key] = 'null'
-
     @server.route('/bentest/api/v1/members/<int:id>', methods = ['GET','PUT','DELETE'])
     def members(id):
 
@@ -78,7 +70,7 @@ def main():
                 if not values:
                     return 'Unsuccessful. No member with id %d found.' % id
 
-                return jsonify(dict(zip(members_cols,values)))
+                return jsonify(OrderedDict(zip(members_cols,values)))
 
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e)
@@ -87,7 +79,7 @@ def main():
         elif request.method == 'PUT':
             try:
                 # Capture HTTP request data (JSON) and load into an update dictionary
-                update_dict = json.loads(request.data)
+                update_dict = OrderedDict(json.loads(request.data))
 
                 # Ensure that the id matches
                 if id != int(update_dict['id']):
@@ -99,11 +91,12 @@ def main():
                     return 'Error: ' + output
 
                 # Execute and commit SQL command
-                sql = 'UPDATE members\nSET\n' + ',\n'.join([x + ' = ' + str(update_dict[x]) for x in update_dict.keys()]) + '\nWHERE id = %d;' % id
-                pgcurs.execute(sql)
+                # TODO: incorporate this database sanitzed version into other HTTP methods and into projects HTTP methods
+                sql = 'UPDATE members\nSET\n' + ',\n'.join([x + ' = %(' + x + ')s' for x in update_dict.keys()]) + '\nWHERE id = %(id)s;'
+                pgcurs.execute( sql, update_dict )
                 pgconn.commit()
 
-                return 'Successfully updated member with id %d' % id + ' with following SQL command:\n' + sql
+                return 'Successfully updated member with following SQL command:\n' + sql % update_dict, 201
 
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e)
@@ -121,12 +114,12 @@ def main():
         # POST method will insert a row into the members table of the database with the new, supplied JSON
         try:
             # Capture HTTP request data in JSON
-            insert_dict = json.loads(request.data)
+            insert_dict = OrderedDict(json.loads(request.data))
 
             # Perform checks on dict describing values to be inserted
             inputs_check = check_database_inputs(insert_dict, members_table)
             if inputs_check:
-                return 'Error: ' + output
+                return 'Error: ' + inputs_check
 
             # Execute and commit SQL command
             keys = []
@@ -136,11 +129,11 @@ def main():
                 vals.append(insert_dict[key])
 
             # Execute and commit SQL command
-            sql ='INSERT INTO members\n(' + ', '.join(keys) + ')\nVALUES\n(' + ', '.join([str(x) for x in vals])  + ');'
+            sql ='INSERT INTO members\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + ', '.join([str(x) for x in vals])  + ');'
             pgcurs.execute(sql)
             pgconn.commit()
 
-            return 'Successfully created member with following SQL command:\n' + sql
+            return 'Successfully created member with following SQL command:\n' + sql, 201
 
         except Exception as e:
             return 'Unsuccessful. Error:\n' + str(e)
@@ -157,7 +150,7 @@ def main():
                 if not values:
                     return 'Unsuccessful. No project with id %d found.' % id
 
-                return jsonify(dict(zip(projects_cols,values)))
+                return jsonify(OrderedDict(zip(projects_cols,values)))
 
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e)
@@ -182,7 +175,7 @@ def main():
                 pgcurs.execute(sql)
                 pgconn.commit()
 
-                return 'Successfully updated project with id %d' % id + ' with following SQL command:\n' + sql
+                return 'Successfully updated project with id %d' % id + ' with following SQL command:\n' + sql, 201
 
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e)
@@ -219,12 +212,17 @@ def main():
             pgcurs.execute(sql)
             pgconn.commit()
 
-            return 'Successfully created project with following SQL command:\n' + sql
+            return 'Successfully created project with following SQL command:\n' + sql, 201
 
         except Exception as e:
             return 'Unsuccessful. Error:\n' + str(e)
+
+    # TODO: modify to be useful
+    import view_test
+    view_test.run_view_test(server)
 
     # Run the server on port 7000
     server.run('0.0.0.0',port=7000, debug=True)
 
 main()
+
