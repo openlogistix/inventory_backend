@@ -48,28 +48,28 @@ def main():
         # Give the headers in the HTTP response
         return display_text + '<p><p>Headers:<p>' + request.headers.__str__().replace('\n','<p>')
 
-    # TODO move this function inside class, add better comment
-    def check_database_inputs(change_dict, table):
-        
-        # Ensure that all columns in change_dict are in the table definition
-        for col in change_dict.keys():
-            if col not in table.keys():
-                return 'Column %s not found in table!' % col
-
     # Class view_set creates a set of views for HTTP requests and routes them to a resource endpoint
     class APIViewSet( MethodView ):
         
         # Constructor accepts options to determine the views to create
-        def __init__( self, resource, connection, cursor, table ):
+        def __init__( self, resource, table, connection, cursor ):
 
             # Store input parameter values into instance member variables
+            self.resource   = resource
             self.connection = connection
             self.cursor     = cursor
-            self.resource   = resource
             self.table      = table
 
             # Primary key is the first column of the table
             self.pri_key    = self.table.keys()[0]
+
+        # Check if the columns to be changed exist in the table
+        def check_database_inputs(change_dict, table):
+            
+            # Ensure that all columns in change_dict are in the table definition
+            for col in change_dict.keys():
+                if col not in table.keys():
+                    return 'Column %s not found in table!' % col
             
         # GET method will return the JSON for the resource with that ID
         def get(self, id):
@@ -155,157 +155,20 @@ def main():
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e)
 
-    members_views = APIViewSet.as_view( 'members_api', 'members', pgconn, pgcurs, members_table )
-    server.add_url_rule( '/bentest/api/v1/members/', defaults={ 'id':None }, view_func=members_views, methods=['GET'] )
-    server.add_url_rule( '/bentest/api/v1/members/', view_func=members_views, methods=['POST'] )
-    server.add_url_rule( '/bentest/api/v1/members/<int:id>', view_func=members_views, methods=['GET','PUT','DELETE'] )
+    # Create a custom API with standard HTTP methods for GET, POST, PUT, and DELETE
+    def create_API( resource_url, table, conn, curs ):
+        
+        resource = resource_url.split('/')[-2]
+        assert len(resource) > 2, 'Resource URL should be in the form: /path/from/host/to/resource/'
+        
+        resource_views = APIViewSet.as_view( resource + '_api', resource, table, conn, curs )
+        server.add_url_rule( resource_url, defaults={ 'id':None }, view_func=resource_views, methods=['GET'] )
+        server.add_url_rule( resource_url, view_func=resource_views, methods=['POST'] )
+        server.add_url_rule( resource_url + '<int:id>', view_func=resource_views, methods=['GET','PUT','DELETE'] )
 
-#    @server.route('/bentest/api/v1/members/<int:id>', methods = ['GET','PUT','DELETE'])
-#    def members(id):
-#
-#        # GET method will return the JSON for the member with that ID
-#        if request.method == 'GET':
-#            try:
-#                pgcurs.execute('SELECT * FROM members WHERE id = %d' % id)
-#                values = pgcurs.fetchone()
-#
-#                if not values:
-#                    return 'Unsuccessful. No member with id %d found.' % id
-#
-#                return jsonify(OrderedDict(zip(members_cols,values)))
-#
-#            except Exception as e:
-#                return 'Unsuccessful. Error:\n' + str(e)
-#
-#        # PUT method will update the members table with the new, supplied JSON for the member with that ID
-#        elif request.method == 'PUT':
-#            try:
-#                # Capture HTTP request data (JSON) and load into an update dictionary
-#                update_dict = OrderedDict(json.loads(request.data))
-#
-#                # Ensure that the id matches
-#                if id != int(update_dict['id']):
-#                    return 'Error: ID does not match in body and URL'
-#
-#                # Perform checks on dict describing values to be updated
-#                inputs_check = check_database_inputs(update_dict, members_table)
-#                if inputs_check:
-#                    return 'Error: ' + inputs_check
-#
-#                # Execute and commit SQL command
-#                sql = 'UPDATE members\nSET\n' + ',\n'.join([x + ' = %(' + x + ')s' for x in update_dict.keys()]) + '\nWHERE id = %(id)s;'
-#                pgcurs.execute( sql, update_dict )
-#                pgconn.commit()
-#
-#                return 'Successfully updated member with following SQL command:\n' + sql % update_dict, 201
-#
-#            except Exception as e:
-#                return 'Unsuccessful. Error:\n' + str(e)
-#
-#        # DELETE method will delete a row in the members table at the provided id
-#        elif request.method == 'DELETE':
-#
-#            pgcurs.execute('DELETE FROM members WHERE id = %d' % id)
-#
-#            return 'Successfully deleted member with id %d' % id
-#        
-#    @server.route('/bentest/api/v1/members', methods = ['POST'])
-#    def members_post():
-#
-#        # POST method will insert a row into the members table of the database with the new, supplied JSON
-#        try:
-#            # Capture HTTP request data in JSON
-#            insert_dict = OrderedDict(json.loads(request.data))
-#
-#            # Perform checks on dict describing values to be inserted
-#            inputs_check = check_database_inputs(insert_dict, members_table)
-#            if inputs_check:
-#                return 'Error: ' + inputs_check
-#
-#            # Execute and commit SQL command
-#            sql ='INSERT INTO members\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + \
-#                ', '.join( ['%(' + x + ')s' for x in insert_dict.keys()] )  + ');'
-#            pgcurs.execute(sql, insert_dict)
-#            pgconn.commit()
-#
-#            return 'Successfully created member with following SQL command:\n' + sql % insert_dict, 201
-#
-#        except Exception as e:
-#            return 'Unsuccessful. Error:\n' + str(e)
-
-    @server.route('/bentest/api/v1/projects/<int:id>', methods = ['GET','PUT','DELETE'])
-    def projects(id):
-
-        # GET method will return the JSON for the project with that ID
-        if request.method == 'GET':
-            try:
-                pgcurs.execute('SELECT * FROM projects WHERE id = %d' % id)
-                values = pgcurs.fetchone()
-
-                if not values:
-                    return 'Unsuccessful. No project with id %d found.' % id
-
-                return jsonify(OrderedDict(zip(projects_cols,values)))
-
-            except Exception as e:
-                return 'Unsuccessful. Error:\n' + str(e)
-
-        # PUT method will update the projects table with the new, supplied JSON for the project with that ID
-        elif request.method == 'PUT':
-            try:
-                # Capture HTTP request data (JSON) and load into an update dictionary
-                update_dict = OrderedDict(json.loads(request.data))
-
-                # Ensure that the id matches
-                if id != int(update_dict['id']):
-                    return 'Error: ID does not match in body and URL'
-
-                # Perform checks on dict describing values to be updated
-                inputs_check = check_database_inputs(update_dict, projects_table)
-                if inputs_check:
-                    return 'Error: ' + inputs_check
-
-                # Execute and commit SQL command
-                sql = 'UPDATE projects\nSET\n' + ',\n'.join([x + ' = %(' + x + ')s' for x in update_dict.keys()]) + '\nWHERE id = %(id)s;'
-                pgcurs.execute( sql, update_dict )
-                pgconn.commit()
-
-                return 'Successfully updated project with following SQL command:\n' + sql % update_dict, 201
-
-            except Exception as e:
-                return 'Unsuccessful. Error:\n' + str(e)
-
-        # DELETE method will delete a row in the projects table at the provided id
-        elif request.method == 'DELETE':
-
-            pgcurs.execute('DELETE FROM projects WHERE id = %d' % id)
-
-            return 'Successfully deleted projects with id %d' % id
-
-    @server.route('/bentest/api/v1/projects', methods = ['POST'])
-    def projects_post():
-
-        # POST method will insert a row into the projects table of the database with the new, supplied JSON
-        try:
-            # Capture HTTP request data in JSON
-            insert_dict = OrderedDict(json.loads(request.data))
-
-            # Perform checks on dict describing values to be inserted
-            inputs_check = check_database_inputs(insert_dict, projects_table)
-            if inputs_check:
-                return 'Error: ' + inputs_check
-
-            # Execute and commit SQL command
-            sql ='INSERT INTO projects\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + \
-                ', '.join( ['%(' + x + ')s' for x in insert_dict.keys()] )  + ');'
-            pgcurs.execute(sql, insert_dict)
-            pgconn.commit()
-
-            return 'Successfully created project with following SQL command:\n' + sql % insert_dict, 201
-
-        except Exception as e:
-            return 'Unsuccessful. Error:\n' + str(e)
-
+    create_API( '/bentest/api/v1/members/',  members_table,  pgconn, pgcurs )
+    create_API( '/bentest/api/v1/projects/', projects_table, pgconn, pgcurs )
+    
     # Run the server on port 7000
     server.run('0.0.0.0',port=7000, debug=True)
 
