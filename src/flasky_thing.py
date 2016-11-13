@@ -43,17 +43,20 @@ def main():
     # Create API for projects resource
     create_API( server, '/bentest/api/v1/projects/', projects_table, pgconn, pgcurs )
 
+    # Define project_membership table column names and data types
+    proj_memb_cols       = ('id','project_id','member_id')
+    proj_memb_cols_types = ('int','int','int')
+    proj_memb_table      = OrderedDict( zip( proj_memb_cols, proj_memb_cols_types ) )
+
+    # Create API for project_membership resource
+    create_API( server, '/bentest/api/v1/project_membership/', proj_memb_table, pgconn, pgcurs )
+
     @server.route('/bentest')
     def home():
 
-        # Create test page for /bentest
-        display_text = """
-        <title>Test Page</title>
-        hello?! world?!...<p>
-        """
-
         # Give the headers in the HTTP response
-        return display_text + '<p><p>Headers:<p>' + request.headers.__str__().replace('\n','<p>')
+        return '<title>Testing</title>hello?! world?!..<p><p>Headers:<p>' + \
+            request.headers.__str__().replace('\n','<p>')
 
     # Run the server on port 7000
     server.run('0.0.0.0',port=7000, debug=True)
