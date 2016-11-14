@@ -1,12 +1,14 @@
+import os
+import sys
+import json
+import sqlite3
+from collections import OrderedDict
+
+import psycopg2
 from flask import Flask, jsonify, request, json
 from flask.views import MethodView
-from collections import OrderedDict
-from views_api import create_API
-import psycopg2
-import sqlite3
-import json
-import sys
-import os
+
+from views_api import create_api
 
 def create_pgconn():
 
@@ -33,7 +35,7 @@ def main():
     members_table       = OrderedDict( zip( members_cols, members_cols_types ) )
 
     # Create API for members resource
-    create_API( server, '/bentest/api/v1/members/',  members_table,  pgconn, pgcurs )
+    create_api( server, '/bentest/api/v1/members/',  members_table,  pgconn, pgcurs )
 
     # Define projects table column names and data types
     projects_cols       = ('id','lead','description','budget')
@@ -41,7 +43,7 @@ def main():
     projects_table      = OrderedDict( zip( projects_cols, projects_cols_types ) )
 
     # Create API for projects resource
-    create_API( server, '/bentest/api/v1/projects/', projects_table, pgconn, pgcurs )
+    create_api( server, '/bentest/api/v1/projects/', projects_table, pgconn, pgcurs )
 
     # Define project_membership table column names and data types
     proj_memb_cols       = ('id','project_id','member_id')
@@ -49,7 +51,7 @@ def main():
     proj_memb_table      = OrderedDict( zip( proj_memb_cols, proj_memb_cols_types ) )
 
     # Create API for project_membership resource
-    create_API( server, '/bentest/api/v1/project_membership/', proj_memb_table, pgconn, pgcurs )
+    create_api( server, '/bentest/api/v1/project_membership/', proj_memb_table, pgconn, pgcurs )
 
     @server.route('/bentest')
     def home():

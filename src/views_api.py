@@ -1,12 +1,20 @@
+"""
+Contains the APIViewSet class and create_api function for the automatic generation
+of a RESTful web API.
+
+"""
+
+import json
+from collections import OrderedDict
+
 from flask import jsonify, request, json
 from flask.views import MethodView
-from collections import OrderedDict
-import json
+
 
 # Class APIViewSet creates a set of views for HTTP requests and routes them to a resource endpoint
 class APIViewSet( MethodView ):
     
-    # Constructor accepts options to determine the views to create
+    # Constructor has parameters to define the resource
     def __init__( self, resource, table, connection, cursor ):
 
         # Store input parameter values into instance member variables
@@ -26,15 +34,31 @@ class APIViewSet( MethodView ):
             if col not in table.keys():
                 return 'Column %s not found in table!' % col
         
-    # GET method will return the JSON for the resource with that ID
+    # GET method will return the JSON for the specified resource(s)
     def get(self, id):
 
+        # If no id is given, return the JSON for all records in the database
         if id is None:
-            return 'Not implemented yet!'
-            # TODO return list of all resources
+            try:
+                # Perform SQL query for all records
+                self.cursor.execute('SELECT * FROM ' + self.resource)
+                
+                # Create list of dictionaries for JSON output
+                records = []
+                for record in self.cursor.fetchall():
+                    records.append( OrderedDict( zip( self.table.keys(), record ) ) )
 
+                return jsonify( records )
+            
+            except Exception as e:
+                return 'Unsuccessful. Error:\n' + str(e), 500
+
+            return 'Not implemented yet!'
+
+        # Otherwise if there is an ID, return the JSON for the requested record
         else:
             try:
+                # Perform SQL query for a given record
                 self.cursor.execute('SELECT * FROM ' + self.resource + ' WHERE ' + \
                     self.pri_key + ' = %s', (str(id),) )
                 record = self.cursor.fetchone()
@@ -45,7 +69,7 @@ class APIViewSet( MethodView ):
                 return jsonify( OrderedDict( zip( self.table.keys(), record ) ) )
 
             except Exception as e:
-                return 'Unsuccessful. Error:\n' + str(e), 400
+                return 'Unsuccessful. Error:\n' + str(e), 500
 
     # PUT method will update the record with the supplied JSON info
     def put(self, id):
@@ -57,7 +81,7 @@ class APIViewSet( MethodView ):
             # Ensure that if the id exists in update_dict, it matches the id provided in URL
             if self.pri_key in update_dict:
                 if id != int( update_dict[self.pri_key] ):
-                    return 'Error: ID does not match in body and URL', 400
+                    return 'Error: ID does not match in body and URL', 500
             # If the id is not in update_dict, add it
             else:
                 update_dict['id'] = id
@@ -65,7 +89,7 @@ class APIViewSet( MethodView ):
             # Perform checks on dict describing values to be updated
             inputs_check = check_database_inputs( update_dict, self.table )
             if inputs_check:
-                return 'Error: ' + inputs_check, 400
+                return 'Error: ' + inputs_check, 500
 
             # Execute and commit SQL command
             sql = 'UPDATE ' + self.resource + '\nSET\n' + ',\n'.join([x + ' = %(' + x + ')s' for x in update_dict.keys()]) + '\nWHERE ' + self.pri_key + ' = %(id)s;'
@@ -75,7 +99,7 @@ class APIViewSet( MethodView ):
             return 'Successfully updated resource with following SQL command:\n' + sql % update_dict, 201
 
         except Exception as e:
-            return 'Unsuccessful. Error:\n' + str(e), 400
+            return 'Unsuccessful. Error:\n' + str(e), 500
 
     # DELETE method will delete the record with the matching id
     def delete(self, id):
@@ -110,14 +134,18 @@ class APIViewSet( MethodView ):
         except Exception as e:
             return 'Unsuccessful. Error:\n' + str(e)
 
+
 # Create a custom API with standard HTTP methods for GET, POST, PUT, and DELETE
-def create_API( server, resource_url, table, conn, curs ):
+def create_api( server, resource_url, table, conn, curs ):
     
+    # Find the resource name from the provided URL
     resource = resource_url.split('/')[-2]
     assert len(resource) > 2, 'Resource URL should be in the form: /path/from/host/to/resource/'
     
+    # Create the views for the API, routing the URLs as needed to the appropriate methods
     resource_views = APIViewSet.as_view( resource + '_api', resource, table, conn, curs )
     server.add_url_rule( resource_url, defaults={ 'id':None }, view_func=resource_views, methods=['GET'] )
     server.add_url_rule( resource_url, view_func=resource_views, methods=['POST'] )
     server.add_url_rule( resource_url + '<int:id>', view_func=resource_views, methods=['GET','PUT','DELETE'] )
+
 
