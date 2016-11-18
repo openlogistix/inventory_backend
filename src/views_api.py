@@ -27,15 +27,15 @@ class APIViewSet( MethodView ):
         self.pri_key    = self.table.keys()[0]
 
     # Check if the columns to be changed exist in the table
-    def check_database_inputs(change_dict, table):
+    def check_database_inputs( self, change_dict ):
         
         # Ensure that all columns in change_dict are in the table definition
         for col in change_dict.keys():
-            if col not in table.keys():
+            if col not in self.table.keys():
                 return 'Column %s not found in table!' % col
         
     # GET method will return the JSON for the specified resource(s)
-    def get(self, id):
+    def get( self, id ):
 
         # If no id is given, return the JSON for all records in the database
         if id is None:
@@ -52,8 +52,6 @@ class APIViewSet( MethodView ):
             
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e), 500
-
-            return 'Not implemented yet!'
 
         # Otherwise if there is an ID, return the JSON for the requested record
         else:
@@ -72,7 +70,7 @@ class APIViewSet( MethodView ):
                 return 'Unsuccessful. Error:\n' + str(e), 500
 
     # PUT method will update the record with the supplied JSON info
-    def put(self, id):
+    def put( self, id ):
 
         try:
             # Capture HTTP request data (JSON) and load into an update dictionary
@@ -87,7 +85,7 @@ class APIViewSet( MethodView ):
                 update_dict['id'] = id
 
             # Perform checks on dict describing values to be updated
-            inputs_check = check_database_inputs( update_dict, self.table )
+            inputs_check = self.check_database_inputs( update_dict )
             if inputs_check:
                 return 'Error: ' + inputs_check, 500
 
@@ -96,30 +94,30 @@ class APIViewSet( MethodView ):
             self.cursor.execute( sql, update_dict )
             self.connection.commit()
 
-            return 'Successfully updated resource with following SQL command:\n' + sql % update_dict, 201
+            return 'Successfully updated resource with following SQL command:\n' + self.cursor.mogrify( sql, update_dict ), 201
 
         except Exception as e:
             return 'Unsuccessful. Error:\n' + str(e), 500
 
     # DELETE method will delete the record with the matching id
-    def delete(self, id):
+    def delete( self, id ):
 
         # Execute and commit SQL command
         sql = 'DELETE FROM ' + self.resource + ' WHERE id = %s'
         self.cursor.execute(sql, {self.pri_key:id} )
         self.connection.commit()
 
-        return 'Successfully deleted resource with ' + self.pri_key + ' %d' % id, 201
+        return 'Successfully deleted resource with following SQL command:\n' + self.cursor.mogrify( sql, {self.pri_key:id} ), 201
 
     # POST method will create a record with the supplied JSON info
-    def post(self):
+    def post( self ):
 
         try:
             # Capture HTTP request data in JSON
             insert_dict = OrderedDict( json.loads( request.data ) )
 
             # Perform checks on dict describing values to be inserted
-            inputs_check = check_database_inputs( insert_dict, self.table )
+            inputs_check = check_database_inputs( insert_dict )
             if inputs_check:
                 return 'Error: ' + inputs_check
 
@@ -129,7 +127,7 @@ class APIViewSet( MethodView ):
             self.cursor.execute( sql, insert_dict )
             self.connection.commit()
 
-            return 'Successfully created resource with following SQL command:\n' + sql % insert_dict, 201
+            return 'Successfully created resource with following SQL command:\n' + self.cursor.mogrify( sql, insert_dict ), 201
 
         except Exception as e:
             return 'Unsuccessful. Error:\n' + str(e)
@@ -137,6 +135,9 @@ class APIViewSet( MethodView ):
 
 # Create a custom API with standard HTTP methods for GET, POST, PUT, and DELETE
 def create_api( server, resource_url, table, conn, curs ):
+    # TODO: provide functionality to check if the table exists in the database, and create it
+    #       if it has not been made. An optional parameter should exist that enables this feature,
+    #       so that the default functionality is not to create tables (in case of typos, etc).
     
     # Find the resource name from the provided URL
     resource = resource_url.split('/')[-2]
