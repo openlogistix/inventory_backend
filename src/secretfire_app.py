@@ -5,7 +5,7 @@ import sqlite3
 from collections import OrderedDict
 
 import psycopg2
-from flask import Flask, jsonify, request, json
+from flask import Flask, jsonify, request, json, send_from_directory
 from flask.views import MethodView
 
 from views_api import create_api
@@ -23,7 +23,7 @@ def create_pgcurs(conn):
 def main():
 
     # Set up Flask server
-    server = Flask('secret_fire')
+    server = Flask('secret_fire' )
 
     # Set up connection to postgres database
     pgconn = create_pgconn()
@@ -56,9 +56,12 @@ def main():
     @server.route('/bentest')
     def home():
 
-        # Give the headers in the HTTP response
-        return '<title>Testing</title>hello?! world?!..<p><p>Headers:<p>' + \
-            request.headers.__str__().replace('\n','<p>')
+        # Test response which gives headers
+        # return '<title>Testing</title>hello?! world?!..<p><p>Headers:<p>' + \
+        #   request.headers.__str__().replace('\n','<p>')
+        print 'requesting index'
+
+        return send_from_directory('static','index.html')
 
     # Run the server on port 7000
     server.run('0.0.0.0',port=7000, debug=True)
