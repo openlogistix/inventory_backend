@@ -3,14 +3,12 @@ Contains the APIViewSet class and create_api function for the automatic generati
 of a RESTful web API.
 
 """
-
+import sys
 import json
 from collections import OrderedDict
 
 from flask import jsonify, request, json
 from flask.views import MethodView
-
-
 # Class APIViewSet creates a set of views for HTTP requests and routes them to a resource endpoint
 class APIViewSet( MethodView ):
     
@@ -113,9 +111,16 @@ class APIViewSet( MethodView ):
     def post( self ):
 
         try:
-            # Capture HTTP request data in JSON
-            insert_dict = OrderedDict( json.loads( request.data ) )
-
+            try:
+                # Capture HTTP request data in JSON if present
+                insert_dict = OrderedDict( request.json() )
+            except ValueError:
+                # Check for form data
+                if request.form:
+                    insert_dict = OrderedDict(request.form)
+                    insert_dict.update(andlefiles(request.files, self.resource))
+                else:
+                    raise
             # Perform checks on dict describing values to be inserted
             inputs_check = check_database_inputs( insert_dict )
             if inputs_check:
@@ -132,6 +137,20 @@ class APIViewSet( MethodView ):
         except Exception as e:
             return 'Unsuccessful. Error:\n' + str(e)
 
+STATICFILEPATH = "/var/www/secretfire/static"
+def handlefiles(files, resource):
+    """ Save the files out of a request to a static file directory and returns a dict with a mapping of the files to
+        their location on disk. """
+    filepaths_dict = {}
+    basedir = os.path.join(STATICFILEPATH, resource)
+    if not os.path.isdir(basedir):
+        os.mkdir(basedir)
+    for filename, file in files.items():
+        filepath = os.path.join(basedir, filename)
+        #Call to the requests file object save() method to save file to disk
+        file.save(filepath)
+        filepaths_dict[filename] = filepath
+    return filepaths_dict
 
 # Create a custom API with standard HTTP methods for GET, POST, PUT, and DELETE
 def create_api( server, resource_url, table, conn, curs ):
