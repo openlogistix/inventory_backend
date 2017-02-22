@@ -43,6 +43,14 @@ class SecretFireAPI(Flask):
 
         # Create API for project_membership resource
         create_api( self, '/bentest/api/v1/project_membership/', proj_memb_table, pgconn, pgcurs )
+        
+        # Define gear table column names and data types
+        gear_cols        = ('id','name','image','location','weight','width','height','depth','tags')
+        gear_cols_types  = ('int','text','text','text','int','int','int','int','text')
+        gear_table       = OrderedDict( zip( gear_cols, gear_cols_types ) )
+
+        # Create API for gear resource
+        create_api( self, '/bentest/api/v1/gear/',  gear_table,  pgconn, pgcurs )
 
         @self.route('/bentest')
         def home():
