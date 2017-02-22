@@ -5,7 +5,6 @@ of a RESTful web API.
 """
 import os
 import os.path
-import sys
 import json
 from collections import OrderedDict
 
@@ -120,7 +119,7 @@ class APIViewSet( MethodView ):
                 # Check for form data
                 if request.form:
                     insert_dict = OrderedDict(request.form)
-                    insert_dict.update(andlefiles(request.files, self.resource))
+                    insert_dict.update(handlefiles(request.files, self.resource))
                 else:
                     raise
             # Perform checks on dict describing values to be inserted
