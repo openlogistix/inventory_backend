@@ -110,15 +110,13 @@ class APIViewSet( MethodView ):
 
     # POST method will create a record with the supplied JSON info
     def post( self ):
-
         try:
             if request.get_json() is None:
                 # Check for form data
                 if request.form:
                     insert_dict = OrderedDict(request.form)
-                    insert_dict.update(handlefiles(request.files, self.resource))
-                else:
-                    raise
+                    for filekey in request.files:
+                        del insert_dict[filekey]
             else:
                 # Capture HTTP request data in JSON if present
                 insert_dict = OrderedDict( request.get_json() )
@@ -134,25 +132,47 @@ class APIViewSet( MethodView ):
             self.cursor.execute( sql, insert_dict )
             self.connection.commit()
 
+            if request.files:
+                # Get primary key for last inserted element
+                valuegetter = "SELECT currval('{resource}_seq_id');".format(resource=self.resource)
+                self.cursor.execute(sql)
+                primarykey = self.cursor.fetchone()[0]
+
+                # Save any files to disk
+                columntofilename = handlefiles(request.files, self.resource, primarykey)
+                sql = "UPDATE {table} SET ".format(table=self.resource) + \
+                      ", ".join("{col} = {val}".format(col=name, val=filepath) for name, filepath in columntofilename.items()) + \
+                      "WHERE id = {key};".format(key=primarykey)
+                self.cursor.execute(sql)
+
             return 'Successfully created resource with following SQL command:\n' + self.cursor.mogrify( sql, insert_dict ), 201
 
         except Exception as e:
             raise
             #return 'Unsuccessful. Error:\n' + str(e)
 
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 STATICFILEPATH = "/var/www/secretfire/static"
-def handlefiles(files, resource):
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def getext(filename):
+    return filename.rsplit(".", 1)[1].to_lower()
+
+def handlefiles(files, resource, pkey):
     """ Save the files out of a request to a static file directory and returns a dict with a mapping of the files to
         their location on disk. """
     filepaths_dict = {}
     basedir = os.path.join(STATICFILEPATH, resource)
     if not os.path.isdir(basedir):
         os.mkdir(basedir)
-    for filename, file in files.items():
-        filepath = os.path.join(basedir, filename)
+    for column, file in files.items():
+        ext = getext(file.filename)
+        filepath = os.path.join(basedir, "{pkey}_{column}.{ext}".format(pkey=pkey,column=column,ext=ext))
         #Call to the requests file object save() method to save file to disk
         file.save(filepath)
-        filepaths_dict[filename] = filepath
+        filepaths_dict[column] = filepath
     return filepaths_dict
 
 # Create a custom API with standard HTTP methods for GET, POST, PUT, and DELETE
