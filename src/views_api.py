@@ -111,16 +111,7 @@ class APIViewSet( MethodView ):
     # POST method will create a record with the supplied JSON info
     def post( self ):
         try:
-            if request.get_json() is None:
-                # Check for form data
-                if request.form:
-                    insert_dict = OrderedDict(request.form)
-                    for filekey in request.files:
-                        del insert_dict[filekey]
-            else:
-                # Capture HTTP request data in JSON if present
-                insert_dict = OrderedDict( request.get_json() )
-
+            insert_dict = OrderedDict( request.get_json() if request.get_json() is not None else request.form)
             # Perform checks on dict describing values to be inserted
             inputs_check = self.check_database_inputs( insert_dict )
             if inputs_check:
