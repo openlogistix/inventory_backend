@@ -114,7 +114,7 @@ class APIViewSet( MethodView ):
         try:
             try:
                 # Capture HTTP request data in JSON if present
-                insert_dict = OrderedDict( request.json() )
+                insert_dict = OrderedDict( request.get_json() )
             except ValueError:
                 # Check for form data
                 if request.form:
@@ -136,7 +136,8 @@ class APIViewSet( MethodView ):
             return 'Successfully created resource with following SQL command:\n' + self.cursor.mogrify( sql, insert_dict ), 201
 
         except Exception as e:
-            return 'Unsuccessful. Error:\n' + str(e)
+            raise
+            #return 'Unsuccessful. Error:\n' + str(e)
 
 STATICFILEPATH = "/var/www/secretfire/static"
 def handlefiles(files, resource):
