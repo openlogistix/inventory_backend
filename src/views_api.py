@@ -3,6 +3,8 @@ Contains the APIViewSet class and create_api function for the automatic generati
 of a RESTful web API.
 
 """
+import os
+import os.path
 import sys
 import json
 from collections import OrderedDict
