@@ -126,7 +126,7 @@ class APIViewSet( MethodView ):
             if request.files:
                 # Get primary key for last inserted element
                 valuegetter = "SELECT currval('{resource}_seq_id');".format(resource=self.resource)
-                self.cursor.execute(sql)
+                self.cursor.execute(valuegetter)
                 primarykey = self.cursor.fetchone()[0]
 
                 # Save any files to disk
