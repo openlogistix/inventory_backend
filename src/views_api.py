@@ -112,18 +112,19 @@ class APIViewSet( MethodView ):
     def post( self ):
 
         try:
-            try:
-                # Capture HTTP request data in JSON if present
-                insert_dict = OrderedDict( request.get_json() )
-            except ValueError:
+            if request.get_json() is None:
                 # Check for form data
                 if request.form:
                     insert_dict = OrderedDict(request.form)
                     insert_dict.update(handlefiles(request.files, self.resource))
                 else:
                     raise
+            else:
+                # Capture HTTP request data in JSON if present
+                insert_dict = OrderedDict( request.get_json() )
+
             # Perform checks on dict describing values to be inserted
-            inputs_check = check_database_inputs( insert_dict )
+            inputs_check = self.check_database_inputs( insert_dict )
             if inputs_check:
                 return 'Error: ' + inputs_check
 
