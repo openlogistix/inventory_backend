@@ -5,7 +5,7 @@ import sqlite3
 from collections import OrderedDict
 
 import psycopg2
-from flask import Flask, jsonify, request, json, send_from_directory
+from flask import Flask, jsonify, request, json, send_from_directory, render_template
 from flask.views import MethodView
 
 from views_api import create_api
@@ -26,7 +26,7 @@ class SecretFireAPI(Flask):
         members_table       = OrderedDict( zip( members_cols, members_cols_types ) )
 
         # Create API for members resource
-        create_api( self, '/bentest/api/v1/members/',  members_table,  pgconn, pgcurs )
+        create_api( self, '/api/v1/members/',  members_table,  pgconn, pgcurs )
 
         # Define projects table column names and data types
         projects_cols       = ('id','lead','description','budget')
@@ -34,7 +34,7 @@ class SecretFireAPI(Flask):
         projects_table      = OrderedDict( zip( projects_cols, projects_cols_types ) )
 
         # Create API for projects resource
-        create_api( self, '/bentest/api/v1/projects/', projects_table, pgconn, pgcurs )
+        create_api( self, '/api/v1/projects/', projects_table, pgconn, pgcurs )
 
         # Define project_membership table column names and data types
         proj_memb_cols       = ('id','project_id','member_id')
@@ -42,7 +42,7 @@ class SecretFireAPI(Flask):
         proj_memb_table      = OrderedDict( zip( proj_memb_cols, proj_memb_cols_types ) )
 
         # Create API for project_membership resource
-        create_api( self, '/bentest/api/v1/project_membership/', proj_memb_table, pgconn, pgcurs )
+        create_api( self, '/api/v1/project_membership/', proj_memb_table, pgconn, pgcurs )
         
         # Define gear table column names and data types
         gear_cols        = ('id','qr_id','name','image','location','weight','width','height','depth','tags')
@@ -50,7 +50,7 @@ class SecretFireAPI(Flask):
         gear_table       = OrderedDict( zip( gear_cols, gear_cols_types ) )
 
         # Create API for gear resource
-        create_api( self, '/bentest/api/v1/gear/',  gear_table,  pgconn, pgcurs )
+        create_api( self, '/api/v1/gear/',  gear_table,  pgconn, pgcurs )
 
         @self.route('/bentest')
         def home():
@@ -61,6 +61,10 @@ class SecretFireAPI(Flask):
 
             return send_from_directory('static','index.html')
 
+        @self.route('/<int:qr_id>')
+        def inventoryobject(qr_id):
+            default = "<html>You've found it! It's gear ID {id}!</html>".format(id=qr_id)
+            return render_template('inventory.html'),200
 
     def create_pgconn(self):
 

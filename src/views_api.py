@@ -117,11 +117,11 @@ class APIViewSet( MethodView ):
             if inputs_check:
                 return 'Error: ' + inputs_check
 
+            print insert_dict
             # Execute and commit SQL command
             sql ='INSERT INTO ' + self.resource + '\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + \
                 ', '.join( ['%(' + x + ')s' for x in insert_dict.keys()] )  + ');'
             self.cursor.execute( sql, insert_dict )
-            self.connection.commit()
 
             if request.files:
                 # Get primary key for last inserted element
@@ -135,7 +135,7 @@ class APIViewSet( MethodView ):
                       ", ".join("{col} = '{val}'".format(col=name, val=filepath) for name, filepath in columntofilename.items()) + \
                       "WHERE id = {key};".format(key=primarykey)
                 self.cursor.execute(sql)
-
+            self.connection.commit()
             return 'Successfully created resource with following SQL command:\n' + self.cursor.mogrify( sql, insert_dict ), 201
 
         except Exception as e:
