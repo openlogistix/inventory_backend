@@ -132,7 +132,7 @@ class APIViewSet( MethodView ):
                 # Save any files to disk
                 columntofilename = handlefiles(request.files, self.resource, primarykey)
                 sql = "UPDATE {table} SET ".format(table=self.resource) + \
-                      ", ".join("{col} = {val}".format(col=name, val=filepath) for name, filepath in columntofilename.items()) + \
+                      ", ".join("{col} = '{val}'".format(col=name, val=filepath) for name, filepath in columntofilename.items()) + \
                       "WHERE id = {key};".format(key=primarykey)
                 self.cursor.execute(sql)
 
@@ -149,7 +149,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def getext(filename):
-    return filename.rsplit(".", 1)[1].to_lower()
+    return filename.rsplit(".", 1)[1].lower()
 
 def handlefiles(files, resource, pkey):
     """ Save the files out of a request to a static file directory and returns a dict with a mapping of the files to
