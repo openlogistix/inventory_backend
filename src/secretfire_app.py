@@ -52,19 +52,14 @@ class SecretFireAPI(Flask):
         # Create API for gear resource
         create_api( self, '/api/v1/gear/',  gear_table,  pgconn, pgcurs )
 
-        @self.route('/bentest')
-        def home():
-
-            # Test response which gives headers
-            # return '<title>Testing</title>hello?! world?!..<p><p>Headers:<p>' + \
-            #   request.headers.__str__().replace('\n','<p>')
-
-            return send_from_directory('static','index.html')
-
         @self.route('/<int:qr_id>')
         def inventoryobject(qr_id):
+            """ The landing page from a given QR code. Looks up the given QR id in the db,
+                renders it if present, otherwise asks for input. """
+
             default = "<html>You've found it! It's gear ID {id}!</html>".format(id=qr_id)
-            return render_template('inventory.html'),200
+            return render_template('input.html'), 200
+            #return default
 
     def create_pgconn(self):
 
