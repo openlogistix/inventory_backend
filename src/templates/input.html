@@ -44,15 +44,20 @@
             display: none;
         }
         body {
-            background-image: url("/static/logo-pixelated-transparent-25.png");
+            background-image: url("/static/logo-pixelated-transparent-15.png");
             background-repeat: no-repeat;
-            background-position: center 512px;
-            height: 1200px;
+            background-position: center 590px;
+            height: 1400px;
             position: relative;
             z-index: -1;
         }
         #qr_id {
             display: none;
+        }
+        #submitbutton {
+            height: 90px;
+            width: 180px;
+            font-size: 40px;
         }
     </style>
   </head>
@@ -89,10 +94,11 @@
           <span id="filenameHolder"></span>
           <input id="qr_id" name="qr_id" value="{{ qr_id }}"/>
           <br><br><br><br><br>
-          <input class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button-accent" onclick="submitForm()" value="Submit"/>
+          <input class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button-accent" onclick="submitForm()" id="submitbutton" value="Submit"/>
         </form>
     </div>
   </div>
+<script>var qr_id = {{ qr_id }};</script>
 <script src="/static/input.js"></script>
 </body>
 </html>

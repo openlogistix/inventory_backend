@@ -24,14 +24,6 @@ class APIViewSet( MethodView ):
 
         # Primary key is the first column of the table
         self.pri_key    = self.table.keys()[0]
-
-    # Check if the columns to be changed exist in the table
-    def check_database_inputs( self, change_dict ):
-        
-        # Ensure that all columns in change_dict are in the table definition
-        for col in change_dict.keys():
-            if col not in self.table.keys():
-                return 'Column %s not found in table!' % col
         
     # GET method will return the JSON for the specified resource(s)
     def get( self, id ):
@@ -83,11 +75,6 @@ class APIViewSet( MethodView ):
             else:
                 update_dict['id'] = id
 
-            # Perform checks on dict describing values to be updated
-            inputs_check = self.check_database_inputs( update_dict )
-            if inputs_check:
-                return 'Error: ' + inputs_check, 500
-
             # Execute and commit SQL command
             sql = 'UPDATE ' + self.resource + '\nSET\n' + ',\n'.join([x + ' = %(' + x + ')s' for x in update_dict.keys()]) + '\nWHERE ' + self.pri_key + ' = %(id)s;'
             self.cursor.execute( sql, update_dict )
@@ -111,13 +98,12 @@ class APIViewSet( MethodView ):
     # POST method will create a record with the supplied JSON info
     def post( self ):
         try:
+            print "json", request.get_json()
+            print "form", request.form
             insert_dict = OrderedDict( request.get_json() if request.get_json() is not None else request.form)
-            # Perform checks on dict describing values to be inserted
-            inputs_check = self.check_database_inputs( insert_dict )
-            if inputs_check:
-                return 'Error: ' + inputs_check
 
             # Execute and commit SQL command
+            print insert_dict
             sql ='INSERT INTO ' + self.resource + '\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + \
                 ', '.join( ['%(' + x + ')s' for x in insert_dict.keys()] )  + ');'
             self.cursor.execute( sql, insert_dict )
