@@ -57,8 +57,11 @@ class SecretFireAPI(Flask):
             """ The landing page from a given QR code. Looks up the given QR id in the db,
                 renders it if present, otherwise asks for input. """
 
-            default = "<html>You've found it! It's gear ID {id}!</html>".format(id=qr_id)
-            return render_template('input.html'), 200
+            if True: # not object with given qr_id
+                return render_template('input.html', qr_id=qr_id), 200
+            else:
+                object_data = "foo"
+                return render_template('object.html', object_data=object_data), 200
             #return default
 
     def create_pgconn(self):
