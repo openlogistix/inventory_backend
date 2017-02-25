@@ -16,6 +16,20 @@
         .material-icons {
             font-size: 96px;
         }
+        #clearbutton {
+            height: 100px;
+            width: 200px;
+            font-size: 50px;
+            background-color: rgb(221, 129, 106);
+        }
+        body {
+            background-image: url("/static/logo-pixelated-transparent-15.png");
+            background-repeat: no-repeat;
+            background-position: center 590px;
+            height: 1400px;
+            position: relative;
+            z-index: -1;
+        }
     </style>
   </head>
 <body>
@@ -37,8 +51,14 @@
       {% endfor %}
 
     </ul>
-
+    <div id="cleardiv">
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button-accent" onclick="clearObject();" id="clearbutton">
+         <i class="material-icons">delete_forever</i> 
+        </button>
+    </div>
     </div>
   </div>
 </body>
+<script> var primarykey = {{ gear.id }};</script>
+<script src="/static/objectview.js"></script>
 </html>

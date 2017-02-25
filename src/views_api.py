@@ -90,10 +90,10 @@ class APIViewSet( MethodView ):
 
         # Execute and commit SQL command
         sql = 'DELETE FROM ' + self.resource + ' WHERE id = %s'
-        self.cursor.execute(sql, {self.pri_key:id} )
+        self.cursor.execute(sql, (id,) )
         self.connection.commit()
 
-        return 'Successfully deleted resource with following SQL command:\n' + self.cursor.mogrify( sql, {self.pri_key:id} ), 201
+        return 'Successfully deleted resource', 201
 
     # POST method will create a record with the supplied JSON info
     def post( self ):

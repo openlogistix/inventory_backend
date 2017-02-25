@@ -52,9 +52,9 @@ class SecretFireAPI(Flask):
         gear_table       = OrderedDict( zip( gear_cols, gear_cols_types ) )
 
         # Create API for gear resource
-        create_api( self, '/api/v1/gear/',  gear_table,  pgconn, pgcurs )
+        create_api( self, '/gear/api/v1/gear/',  gear_table,  pgconn, pgcurs )
 
-        @self.route('/<int:qr_id>')
+        @self.route('/gear/<int:qr_id>')
         def inventoryobject(qr_id):
             """ The landing page from a given QR code. Looks up the given QR id in the db,
                 renders it if present, otherwise asks for input. """
@@ -67,6 +67,10 @@ class SecretFireAPI(Flask):
             else:
                 return render_template('input.html', qr_id=qr_id), 200
             return default
+
+        @self.route('/gear/')
+        def inventory():
+            pass
 
     def create_pgconn(self):
 
@@ -83,8 +87,8 @@ config = {  'host':'0.0.0.0',
             'port':7000,
             'debug':True }
 
+application = SecretFireAPI(__name__)
 if __name__ == '__main__':
-    app = SecretFireAPI(__name__)
-    app.run(**config)
+    application.run(**config)
 
 
