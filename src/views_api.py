@@ -117,12 +117,10 @@ class APIViewSet( MethodView ):
             if inputs_check:
                 return 'Error: ' + inputs_check
 
-            print insert_dict
             # Execute and commit SQL command
             sql ='INSERT INTO ' + self.resource + '\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + \
                 ', '.join( ['%(' + x + ')s' for x in insert_dict.keys()] )  + ');'
             self.cursor.execute( sql, insert_dict )
-
             if request.files:
                 # Get primary key for last inserted element
                 valuegetter = "SELECT currval('{resource}_id_seq');".format(resource=self.resource)
