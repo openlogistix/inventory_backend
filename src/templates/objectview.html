@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-orange.min.css" />
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    <style type="text/css">
+        .mdl-list__item {
+            font-size: 60px;
+            
+        }
+        .imagelabel {
+            color: rgba(0,0,0,.26);
+        }
+        .material-icons {
+            font-size: 96px;
+        }
+    </style>
+  </head>
+<body>
+  <div class="mdl-grid" id="maingrid">
+    <div class="mdl-cell mdl-cell--12-col">
+        <h2 class="mdl-typography--display-4">{{ gear.name }}</h2>
+        <br>
+        <img src="/static/gear/{{ gear.image.rsplit("/",1)[1] }}">
+    <ul class="demo-list-item mdl-list">
+
+      {% for attribute, value in  gear.__dict__.items() %}
+          {% if value and attribute in ["location", "description", "tags"] %}
+          <li class="mdl-list__item">
+            <span class="mdl-list__item-primary-content">
+              {{ attribute }}: {{ value }}
+            </span>
+          </li>
+          {% endif %}
+      {% endfor %}
+
+    </ul>
+
+    </div>
+  </div>
+</body>
+</html>

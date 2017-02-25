@@ -2,13 +2,15 @@ import os
 import sys
 import json
 import sqlite3
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 
 import psycopg2
 from flask import Flask, jsonify, request, json, send_from_directory, render_template
 from flask.views import MethodView
 
 from views_api import create_api
+
+Gear = namedtuple("Gear", ["id","gear_id", "name", "image", "location", "tags", "description"])
 
 class SecretFireAPI(Flask):
 
@@ -56,13 +58,15 @@ class SecretFireAPI(Flask):
         def inventoryobject(qr_id):
             """ The landing page from a given QR code. Looks up the given QR id in the db,
                 renders it if present, otherwise asks for input. """
-
-            if True: # not object with given qr_id
-                return render_template('input.html', qr_id=qr_id), 200
+            query = "SELECT * FROM gear WHERE qr_id = %s;" 
+            pgcurs.execute(query, (qr_id,))
+            result = pgcurs.fetchone()
+            if result:
+                object_data = Gear(*result)
+                return render_template('objectview.html', gear=object_data), 200
             else:
-                object_data = "foo"
-                return render_template('object.html', object_data=object_data), 200
-            #return default
+                return render_template('input.html', qr_id=qr_id), 200
+            return default
 
     def create_pgconn(self):
 
