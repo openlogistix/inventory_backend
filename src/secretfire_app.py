@@ -10,7 +10,7 @@ from flask.views import MethodView
 
 from views_api import create_api
 
-Gear = namedtuple("Gear", ["id","gear_id", "name", "image", "location", "tags", "description"])
+Gear = namedtuple("Gear", ["id","qr_id", "name", "image", "location", "tags", "description"])
 
 class SecretFireAPI(Flask):
 
@@ -70,7 +70,11 @@ class SecretFireAPI(Flask):
 
         @self.route('/gear/')
         def inventory():
-            pass
+            query = "SELECT *FROM gear;";
+            pgcurs.execute(query)
+            results = pgcurs.fetchall()
+            gearitems = [Gear(*row) for row in results]
+            return render_template('inventory.html', geardata=gearitems), 200
 
     def create_pgconn(self):
 
