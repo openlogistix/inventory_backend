@@ -68,9 +68,10 @@ class SecretFireAPI(Flask):
                 return render_template('input.html', qr_id=qr_id), 200
             return default
 
+        @self.route('/gear')
         @self.route('/gear/')
         def inventory():
-            query = "SELECT *FROM gear;";
+            query = "SELECT * FROM gear;";
             pgcurs.execute(query)
             results = pgcurs.fetchall()
             gearitems = [Gear(*row) for row in results]
