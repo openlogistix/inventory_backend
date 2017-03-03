@@ -15,8 +15,12 @@
             line-height: 55px;
             top: 45px;
         }
+.mdl-textfield--floating-label.is-focused .mdl-textfield__label, .mdl-textfield--floating-label.is-dirty .mdl-textfield__label, .mdl-textfield--floating-label.has-placeholder .mdl-textfield__label {
+            font-size: 24px;
+        }
         .mdl-textfield {
             width: 100%;
+            padding-top: 35px;
         }
         .imagelabel {
             color: rgba(0,0,0,.26);
@@ -67,17 +71,17 @@
         <h2 class="mdl-typography--display-4">Gear entry</h2>
         <br>
         <form id="imageform" enctype="multipart/form-data" method="post" action="/gear/api/v1/gear/">
-          <div class="mdl-textfield mdl-js-textfield">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
             <input class="mdl-textfield__input" type="text" id="name" name="name">
             <label class="mdl-textfield__label" for="name">Name</label>
           </div>
           <br>
-          <div class="mdl-textfield mdl-js-textfield">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
             <input class="mdl-textfield__input" type="text" id="location" name="location">
             <label class="mdl-textfield__label" for="location">Location</label>
           </div>
         <br>
-          <div class="mdl-textfield mdl-js-textfield">
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
             <textarea class="mdl-textfield__input" type="text" rows= "3" id="description" name="description" ></textarea>
             <label class="mdl-textfield__label" for="description">Additional description (optional)</label>
           </div>
