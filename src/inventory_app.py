@@ -5,12 +5,20 @@ import sqlite3
 from collections import OrderedDict, namedtuple
 
 import psycopg2
-from flask import Flask, jsonify, request, json, send_from_directory, render_template
 from flask.views import MethodView
+from flask import Flask, jsonify, request, json, send_from_directory, render_template
 
 from views_api import create_api
 
-Gear = namedtuple("Gear", ["id","qr_id", "name", "image", "location", "tags", "description"])
+#  _________________________________________________________________________________________
+# | Function            | URL                                                               |
+# |---------------------+-------------------------------------------------------------------|
+# | org admin           | https://openlogistix.io/org/<int:org_id>/                         |
+# | list inventory      | https://openlogistix.io/org/<int:org_id>/inventory/               |
+# | create/display/edit | https://openlogistix.io/org/<int:org_id>/inventory/<int:obj_id>   |
+
+
+Item = namedtuple("Item", ["id","org_id", "qr_id", "name", "image", "location", "tags", "description"])
 
 class InventoryAPI(Flask):
 
@@ -23,14 +31,14 @@ class InventoryAPI(Flask):
         pgcurs = self.create_pgcurs(pgconn)
 
         # Define gear table column names and data types
-        gear_cols        = ('id','qr_id','name','image','location','weight','width','height','depth','tags')
-        gear_cols_types  = ('int','int','text','text','text','int','int','int','int','text')
+        gear_cols        = ('id','org_id','qr_id','name','image','location','weight','width','height','depth','tags')
+        gear_cols_types  = ('int','int','int','text','text','text','int','int','int','int','text')
         gear_table       = OrderedDict( zip( gear_cols, gear_cols_types ) )
 
         # Create API for gear resource
-        create_api( self, '/gear/api/v1/gear/',  gear_table,  pgconn, pgcurs )
+        create_api( self, '/api/v1/gear/',  gear_table,  pgconn, pgcurs )
 
-        @self.route('/gear/<int:qr_id>')
+        @self.route('/org/<int:org_id>/inventory/<int:qr_id>')
         def inventoryobject(qr_id):
             """ The landing page from a given QR code. Looks up the given QR id in the db,
                 renders it if present, otherwise asks for input. """
@@ -38,24 +46,24 @@ class InventoryAPI(Flask):
             pgcurs.execute(query, (qr_id,))
             result = pgcurs.fetchone()
             if result:
-                object_data = Gear(*result)
+                object_data = Item(*result)
                 return render_template('objectview.html', gear=object_data), 200
             else:
                 return render_template('input.html', qr_id=qr_id), 200
             return default
 
-        @self.route('/gear/')
+        @self.route('/org/<int:org_id>/inventory/')
         def inventory():
-            query = "SELECT *FROM gear;";
+            query = "SELECT * FROM items WHERE ;";
             pgcurs.execute(query)
             results = pgcurs.fetchall()
-            gearitems = [Gear(*row) for row in results]
-            return render_template('inventory.html', geardata=gearitems), 200
+            items = [Item(*row) for row in results]
+            return render_template('inventory.html', inventorydata=items), 200
 
     def create_pgconn(self):
 
         # Initiate a connection to the postgres database
-        return psycopg2.connect('dbname=postgres user=postgres')
+        return psycopg2.connect('dbname=openlogistix user=openlogistix')
 
     def create_pgcurs(self, conn):
 
