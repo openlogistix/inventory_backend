@@ -35,12 +35,12 @@
 <body>
   <div class="mdl-grid" id="maingrid">
     <div class="mdl-cell mdl-cell--12-col">
-        <h2 class="mdl-typography--display-4">{{ gear.name }}</h2>
+        <h2 class="mdl-typography--display-4">{{ item.name }}</h2>
         <br>
-        <img src="/static/gear/{{ gear.image.rsplit("/",1)[1] }}">
+        <img src="/static/gear/{{ item.image.rsplit("/",1)[1] }}">
     <ul class="demo-list-item mdl-list">
 
-      {% for attribute, value in  gear.__dict__.items() %}
+      {% for attribute, value in  item.__dict__.items() %}
           {% if value and attribute in ["location", "description", "tags"] %}
           <li class="mdl-list__item">
             <span class="mdl-list__item-primary-content">
@@ -59,6 +59,6 @@
     </div>
   </div>
 </body>
-<script> var primarykey = {{ gear.id }};</script>
+<script> var primarykey = {{ item.id }};</script>
 <script src="/static/objectview.js"></script>
 </html>
