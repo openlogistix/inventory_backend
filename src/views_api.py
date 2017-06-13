@@ -98,12 +98,9 @@ class APIViewSet( MethodView ):
     # POST method will create a record with the supplied JSON info
     def post( self ):
         try:
-            print "json", request.get_json()
-            print "form", request.form
             insert_dict = OrderedDict( request.get_json() if request.get_json() is not None else request.form)
 
             # Execute and commit SQL command
-            print insert_dict
             sql ='INSERT INTO ' + self.resource + '\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + \
                 ', '.join( ['%(' + x + ')s' for x in insert_dict.keys()] )  + ');'
             self.cursor.execute( sql, insert_dict )
