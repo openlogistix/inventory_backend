@@ -31,8 +31,8 @@ class InventoryAPI(Flask):
         pgcurs = self.create_pgcurs(pgconn)
 
         # Define item table column names and data types
-        item_cols        = ('id','org_id','qr_id','name','image','location','weight','width','height','depth','tags')
-        item_cols_types  = ('int','int','int','text','text','text','int','int','int','int','text')
+        item_cols        = ('id','org_id','qr_id','name','image','location','tags','description')
+        item_cols_types  = ('int','int','int','text','text','text','json','text')
         item_table       = OrderedDict( zip( item_cols, item_cols_types ) )
 
         # Create API for item resource
@@ -61,9 +61,11 @@ class InventoryAPI(Flask):
             return render_template('inventory.html', inventory=items), 200
 
     def create_pgconn(self):
-
+        db = u = 'openlogistix'
+        with open('conf/pw') as pwfile:
+            pw = pwfile.read().rstrip()
         # Initiate a connection to the postgres database
-        return psycopg2.connect('dbname=openlogistix user=openlogistix')
+        return psycopg2.connect(dbname=db, user=u, password=pw)
 
     def create_pgcurs(self, conn):
 
@@ -71,12 +73,12 @@ class InventoryAPI(Flask):
         return conn.cursor()
 
 
-config = {  'host':'0.0.0.0',
-            'port':7000,
+debugconfig = {  'host':'0.0.0.0',
+            'port':1870,
             'debug':True }
 
 application = InventoryAPI(__name__)
 if __name__ == '__main__':
-    application.run(**config)
+    application.run(**debugconfig)
 
 
