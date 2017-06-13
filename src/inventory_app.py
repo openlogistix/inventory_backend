@@ -30,35 +30,35 @@ class InventoryAPI(Flask):
         pgconn = self.create_pgconn()
         pgcurs = self.create_pgcurs(pgconn)
 
-        # Define gear table column names and data types
-        gear_cols        = ('id','org_id','qr_id','name','image','location','weight','width','height','depth','tags')
-        gear_cols_types  = ('int','int','int','text','text','text','int','int','int','int','text')
-        gear_table       = OrderedDict( zip( gear_cols, gear_cols_types ) )
+        # Define item table column names and data types
+        item_cols        = ('id','org_id','qr_id','name','image','location','weight','width','height','depth','tags')
+        item_cols_types  = ('int','int','int','text','text','text','int','int','int','int','text')
+        item_table       = OrderedDict( zip( item_cols, item_cols_types ) )
 
-        # Create API for gear resource
-        create_api( self, '/api/v1/gear/',  gear_table,  pgconn, pgcurs )
+        # Create API for item resource
+        create_api( self, '/api/v1/item/',  item_table,  pgconn, pgcurs )
 
         @self.route('/org/<int:org_id>/inventory/<int:qr_id>')
         def inventoryobject(qr_id):
             """ The landing page from a given QR code. Looks up the given QR id in the db,
                 renders it if present, otherwise asks for input. """
-            query = "SELECT * FROM gear WHERE qr_id = %s;" 
+            query = "SELECT * FROM item WHERE qr_id = %s;" 
             pgcurs.execute(query, (qr_id,))
             result = pgcurs.fetchone()
             if result:
                 object_data = Item(*result)
-                return render_template('objectview.html', gear=object_data), 200
+                return render_template('objectview.html', item=object_data), 200
             else:
                 return render_template('input.html', qr_id=qr_id), 200
             return default
 
         @self.route('/org/<int:org_id>/inventory/')
         def inventory():
-            query = "SELECT * FROM items WHERE ;";
-            pgcurs.execute(query)
+            query = "SELECT * FROM items WHERE org_id = %s;";
+            pgcurs.execute(query, (org_id,))
             results = pgcurs.fetchall()
             items = [Item(*row) for row in results]
-            return render_template('inventory.html', inventorydata=items), 200
+            return render_template('inventory.html', inventory=items), 200
 
     def create_pgconn(self):
 
