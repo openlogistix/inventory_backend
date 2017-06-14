@@ -1,65 +1,76 @@
 <!doctype html>
 <html>
-  <head>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-orange.min.css" />
-    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
-    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-    <style type="text/css">
-        .mdl-textfield__input {
-            font-size: 60px;
-            
-        }
-        .mdl-textfield__label {
-            font-size: 55px;
-            line-height: 55px;
-            top: 45px;
-        }
-        .mdl-textfield {
-            width: 100%;
-        }
-        .imagelabel {
-            color: rgba(0,0,0,.26);
-        }
-        .material-icons {
-            font-size: 96px;
-        }
-        .description-wrapper {
-            max-width: 200px;
-            white-space: pre-wrap;
-        }
-    </style>
-  </head>
+<head>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-orange.min.css" />
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  <style type="text/css">
+      .mdl-textfield__input {
+          font-size: 60px;
+
+      }
+      .mdl-textfield__label {
+          font-size: 55px;
+          line-height: 55px;
+          top: 45px;
+      }
+      .mdl-textfield {
+          width: 100%;
+      }
+      .imagelabel {
+          color: rgba(0,0,0,.26);
+      }
+      .material-icons {
+          font-size: 96px;
+      }
+      .description-wrapper {
+          max-width: 200px;
+          white-space: pre-wrap;
+      }
+  </style>
+</head>
 <body>
-  <div class="mdl-grid" id="maingrid">
-    <div class="mdl-cell mdl-cell--12-col">
-        <h2 class="mdl-typography--display-4">Inventory</h2>
+  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+    <header class="mdl-layout__header">
+      <div class="mdl-layout__header-row">
+        <span class="mdl-layout-title"> {{ org.name }}</span>
+        <div class="mdl-layout-spacer"></div>
+      </div>
+    </header>
+    <main class="mdl-layout__contents">
+      <div class="page-content">
+        <div class="mdl-grid" id="maingrid">
+          <div class="mdl-cell mdl-cell--12-col">
+            <h2 class="mdl-typography--display-4">Inventory</h2>
 
-<table class="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
-  <thead>
-    <tr>
-      <th class="mdl-data-table__cell--non-numeric">Name</th>
-      <th class="mdl-data-table__cell--non-numeric">Location</th>
-      <th class="mdl-data-table__cell--non-numeric">Image</th>
-      <th class="mdl-data-table__cell--non-numeric">Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for item in inventory%}
+            <table class="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
+            <thead>
+              <tr>
+                <th class="mdl-data-table__cell--non-numeric">Name</th>
+                <th class="mdl-data-table__cell--non-numeric">Location</th>
+                <th class="mdl-data-table__cell--non-numeric">Image</th>
+                <th class="mdl-data-table__cell--non-numeric">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in inventory%}
 
-    <tr>
-      <td class="mdl-data-table__cell--non-numeric">
-       <a href="/gear/{{ item.qr_id }}">{{ item.name }}</a>
-      </td>
-      <td class="mdl-data-table__cell--non-numeric">{{ item.location }}</td>
-      <td class="mdl-data-table__cell--non-numeric"><a href="/gear/{{ item.qr_id }}"><img src="/static/gear/{{ item.image.rsplit("/",1)[1] }}" height=300></a></td>
-      <td class="mdl-data-table__cell--non-numeric"><div class="description-wrapper">{{ item.description.decode('utf-8')}}</div></td>
-    </tr>
+              <tr>
+                <td class="mdl-data-table__cell--non-numeric">
+                 <a href="/org/{{ org.id }}/inventory/{{ item.qr_id }}">{{ item.name }}</a>
+                </td>
+                <td class="mdl-data-table__cell--non-numeric">{{ item.location }}</td>
+                <td class="mdl-data-table__cell--non-numeric"><a href="/item/{{ item.qr_id }}"><img src="/static/item/{{ item.image.rsplit("/",1)[1] }}" height=300></a></td>
+                <td class="mdl-data-table__cell--non-numeric"><div class="description-wrapper">{{ item.description.decode('utf-8')}}</div></td>
+              </tr>
 
-    {% endfor %}
-        
-        <br>
-    </div>
+              {% endfor %}
+            </tbody>
+          <br>
+        </div>
+      </div>
+    </main>
   </div>
 </body>
 </html>
