@@ -37,7 +37,7 @@
     <div class="mdl-cell mdl-cell--12-col">
         <h2 class="mdl-typography--display-4">{{ item.name }}</h2>
         <br>
-        <img src="/static/gear/{{ item.image.rsplit("/",1)[1] }}">
+        <img src="/static/item/{{ item.image.rsplit("/",1)[1] }}">
     <ul class="demo-list-item mdl-list">
 
       {% for attribute, value in  item.__dict__.items() %}
