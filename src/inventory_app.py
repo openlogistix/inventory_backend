@@ -42,7 +42,7 @@ class InventoryAPI(Flask):
         def inventoryobject(org_id, qr_id):
             """ The landing page from a given QR code. Looks up the given QR id in the db,
                 renders it if present, otherwise asks for input. """
-            org = self.getorg(org_id)
+            org = getorg(org_id)
             query = "SELECT * FROM item WHERE qr_id = %s;" 
             pgcurs.execute(query, (qr_id,))
             result = pgcurs.fetchone()
@@ -55,21 +55,21 @@ class InventoryAPI(Flask):
 
         @self.route('/org/<int:org_id>/inventory/')
         def inventory(org_id):
-            org = self.getorg(org_id)
+            org = getorg(org_id)
             query = "SELECT * FROM item WHERE org_id = %s;";
             pgcurs.execute(query, (org_id,))
             results = pgcurs.fetchall()
             items = [Item(*row) for row in results]
             return render_template('inventory.html', inventory=items, org=org), 200
 
-    def getorg(self, id):
-        query = "SELECT * FROM org WHERE id = %s;"
-        pgcurs.execute(query, (id,))
-        result = pgcurs.fetchone()
-        org = None
-        if result:
-            org = Org(*result)
-        return org
+        def getorg(id):
+            query = "SELECT * FROM org WHERE id = %s;"
+            pgcurs.execute(query, (id,))
+            result = pgcurs.fetchone()
+            org = None
+            if result:
+                org = Org(*result)
+            return org
 
     def create_pgconn(self):
         db = u = 'openlogistix'
