@@ -124,7 +124,7 @@ class APIViewSet( MethodView ):
             #return 'Unsuccessful. Error:\n' + str(e)
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
-STATICFILEPATH = "/var/www/secretfire/static"
+STATICFILEPATH = "/var/www/openlogistix/static"
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
