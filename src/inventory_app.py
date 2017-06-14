@@ -39,7 +39,7 @@ class InventoryAPI(Flask):
         create_api( self, '/api/v1/item/',  item_table,  pgconn, pgcurs )
 
         @self.route('/org/<int:org_id>/inventory/<int:qr_id>')
-        def inventoryobject(qr_id):
+        def inventoryobject(org_id, qr_id):
             """ The landing page from a given QR code. Looks up the given QR id in the db,
                 renders it if present, otherwise asks for input. """
             query = "SELECT * FROM item WHERE qr_id = %s;" 
@@ -53,8 +53,8 @@ class InventoryAPI(Flask):
             return default
 
         @self.route('/org/<int:org_id>/inventory/')
-        def inventory():
-            query = "SELECT * FROM items WHERE org_id = %s;";
+        def inventory(org_id):
+            query = "SELECT * FROM item WHERE org_id = %s;";
             pgcurs.execute(query, (org_id,))
             results = pgcurs.fetchall()
             items = [Item(*row) for row in results]
