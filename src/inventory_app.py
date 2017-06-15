@@ -43,7 +43,7 @@ class InventoryAPI(Flask):
             """ The landing page from a given QR code. Looks up the given QR id in the db,
                 renders it if present, otherwise asks for input. """
             org = getorg(org_id)
-            query = "SELECT * FROM item WHERE qr_id = %s;" 
+            query = "SELECT * FROM item WHERE qr_id = %s;"
             pgcurs.execute(query, (qr_id,))
             result = pgcurs.fetchone()
             if result:
