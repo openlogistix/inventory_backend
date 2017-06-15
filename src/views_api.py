@@ -12,7 +12,7 @@ from flask import jsonify, request, json
 from flask.views import MethodView
 # Class APIViewSet creates a set of views for HTTP requests and routes them to a resource endpoint
 class APIViewSet( MethodView ):
-    
+
     # Constructor has parameters to define the resource
     def __init__( self, resource, table, connection, cursor ):
 
@@ -24,7 +24,7 @@ class APIViewSet( MethodView ):
 
         # Primary key is the first column of the table
         self.pri_key    = self.table.keys()[0]
-        
+
     # GET method will return the JSON for the specified resource(s)
     def get( self, id ):
 
@@ -33,14 +33,14 @@ class APIViewSet( MethodView ):
             try:
                 # Perform SQL query for all records
                 self.cursor.execute('SELECT * FROM ' + self.resource)
-                
+
                 # Create list of dictionaries for JSON output
                 records = []
                 for record in self.cursor.fetchall():
                     records.append( OrderedDict( zip( self.table.keys(), record ) ) )
 
                 return jsonify( records )
-            
+
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e), 500
 
@@ -152,11 +152,11 @@ def create_api( server, resource_url, table, conn, curs ):
     # TODO: provide functionality to check if the table exists in the database, and create it
     #       if it has not been made. An optional parameter should exist that enables this feature,
     #       so that the default functionality is not to create tables (in case of typos, etc).
-    
+
     # Find the resource name from the provided URL
     resource = resource_url.split('/')[-2]
     assert len(resource) > 2, 'Resource URL should be in the form: /path/from/host/to/resource/'
-    
+
     # Create the views for the API, routing the URLs as needed to the appropriate methods
     resource_views = APIViewSet.as_view( resource + '_api', resource, table, conn, curs )
     server.add_url_rule( resource_url, defaults={ 'id':None }, view_func=resource_views, methods=['GET'] )
