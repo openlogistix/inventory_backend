@@ -85,7 +85,7 @@ function submitForm(){
     var form = new FormData(document.forms[0]);
     form.set("image", dataURItoBlob(dataurl), filename);
     var post = new XMLHttpRequest();
-    post.open("POST", "/gear/api/v1/gear/", true);
+    post.open("POST", "/api/v1/item/", true);
     //post.setRequestHeader("Content-type", "multipart/form-data");
     post.onreadystatechange = function() {//Call a function when the state changes.
         if(post.readyState == XMLHttpRequest.DONE && post.status >= 200 && post.status < 300) {

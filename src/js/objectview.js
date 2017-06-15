@@ -10,8 +10,8 @@
  * on submit, send PUT xhr with appropriate form data
  *
  */
-var formtemplate = '' + 
-'<form action="/gear/api/v1/gear/%id" method="put">' + 
+var formtemplate = '' +
+'<form action="/api/v1/item/%id" method="put">' +
 '  <div class="mdl-textfield mdl-js-textfield">' +
 '    <input class="mdl-textfield__input" type="text" name="%name">' +
 '    <label class="mdl-textfield__label" for="%name">%value</label>' +
@@ -45,7 +45,7 @@ $(document).ready(function() {
 
 function clearObject(){
     var del = new XMLHttpRequest();
-    del.open("DELETE", "/gear/api/v1/gear/"+primarykey, true);
+    del.open("DELETE", "/api/v1/item/"+primarykey, true);
     del.onreadystatechange = function() {//Call a function when the state changes.
         if(del.readyState == XMLHttpRequest.DONE && del.status >= 200 && del.status < 300) {
             console.log("Success!");
