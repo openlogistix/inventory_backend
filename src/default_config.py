@@ -1,1 +1,1 @@
-STATICFILEPATH = '/var/www/openlogistix/attachments/DEFAULT'
+STATICFILEPATH = '/var/www/openlogistix/attachments'
