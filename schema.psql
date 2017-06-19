@@ -1,0 +1,155 @@
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: item; Type: TABLE; Schema: public; Owner: openlogistix; Tablespace: 
+--
+
+CREATE TABLE item (
+    id integer NOT NULL,
+    org_id integer,
+    qr_id integer,
+    name text,
+    image text,
+    location text,
+    tags json,
+    description text
+);
+
+
+ALTER TABLE public.item OWNER TO openlogistix;
+
+--
+-- Name: item_id_seq; Type: SEQUENCE; Schema: public; Owner: openlogistix
+--
+
+CREATE SEQUENCE item_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.item_id_seq OWNER TO openlogistix;
+
+--
+-- Name: item_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: openlogistix
+--
+
+ALTER SEQUENCE item_id_seq OWNED BY item.id;
+
+
+--
+-- Name: org; Type: TABLE; Schema: public; Owner: openlogistix; Tablespace: 
+--
+
+CREATE TABLE org (
+    id integer NOT NULL,
+    name text,
+    itemlimit integer
+);
+
+
+ALTER TABLE public.org OWNER TO openlogistix;
+
+--
+-- Name: org_id_seq; Type: SEQUENCE; Schema: public; Owner: openlogistix
+--
+
+CREATE SEQUENCE org_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.org_id_seq OWNER TO openlogistix;
+
+--
+-- Name: org_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: openlogistix
+--
+
+ALTER SEQUENCE org_id_seq OWNED BY org.id;
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: openlogistix
+--
+
+ALTER TABLE ONLY item ALTER COLUMN id SET DEFAULT nextval('item_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: openlogistix
+--
+
+ALTER TABLE ONLY org ALTER COLUMN id SET DEFAULT nextval('org_id_seq'::regclass);
+
+
+--
+-- Name: item_pkey; Type: CONSTRAINT; Schema: public; Owner: openlogistix; Tablespace: 
+--
+
+ALTER TABLE ONLY item
+    ADD CONSTRAINT item_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: org_pkey; Type: CONSTRAINT; Schema: public; Owner: openlogistix; Tablespace: 
+--
+
+ALTER TABLE ONLY org
+    ADD CONSTRAINT org_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: org_constraint; Type: FK CONSTRAINT; Schema: public; Owner: openlogistix
+--
+
+ALTER TABLE ONLY item
+    ADD CONSTRAINT org_constraint FOREIGN KEY (org_id) REFERENCES org(id);
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
