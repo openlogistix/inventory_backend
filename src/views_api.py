@@ -76,24 +76,13 @@ class APIViewSet( MethodView ):
         try:
             insert_dict = OrderedDict( request.get_json() if request.get_json() is not None else request.form)
 
-            # Execute and commit SQL command
-            sql ='INSERT INTO ' + self.resource + '\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + \
-                ', '.join( ['%(' + x + ')s' for x in insert_dict.keys()] )  + ');'
-            self.db.cursor.execute( sql, insert_dict )
+            self.db.insert(self.resource, **insert_dict)
             if request.files:
-                # Get primary key for last inserted element
-                valuegetter = "SELECT currval('{resource}_id_seq');".format(resource=self.resource)
-                self.db.cursor.execute(valuegetter)
-                primarykey = self.db.cursor.fetchone()[0]
-
+                id = self.db.getonematching(self.resource, **insert_dict)[0]
                 # Save any files to disk
-                columntofilename = handlefiles(request.files, self.resource, primarykey)
-                sql = "UPDATE {table} SET ".format(table=self.resource) + \
-                      ", ".join("{col} = '{val}'".format(col=name, val=filepath) for name, filepath in columntofilename.items()) + \
-                      "WHERE id = {key};".format(key=primarykey)
-                self.db.cursor.execute(sql)
-            self.db.commit()
-            return 'Successfully created resource with following SQL command:\n' + self.db.cursor.mogrify( sql, insert_dict ), 201
+                columntofilename = handlefiles(request.files, self.resource, id)
+                self.db.updateonematching(self.resource, id=id, **columntofilename)
+            return 'Successfully created resource', 201
 
         except Exception as e:
             raise
