@@ -10,24 +10,21 @@ from collections import OrderedDict
 
 from flask import jsonify, request, json
 from flask.views import MethodView
-# Class APIViewSet creates a set of views for HTTP requests and routes them to a resource endpoint
+
 class APIViewSet( MethodView ):
+    """ Creates a set of views for HTTP requests and routes them to a resource endpoint"""
 
-    # Constructor has parameters to define the resource
     def __init__( self, resource, table, db ):
-
-        # Store input parameter values into instance member variables
         self.resource   = resource
         self.db         = db
         self.table      = table
-
         # Primary key is the first column of the table
         self.pri_key    = self.table.keys()[0]
 
-    # GET method will return the JSON for the specified resource(s)
     def get( self, id ):
-        # If no id is given, return the JSON for all records in the database
+        """ GET method returns the JSON for the specified resource(s)"""
         if id is None:
+            # If no id is given, return the JSON for all records in the database
             try:
                 records = self.db.getallmatching(self.resource)
                 for record in records:
@@ -35,8 +32,8 @@ class APIViewSet( MethodView ):
                 return jsonify( records )
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e), 500
-        # Otherwise if there is an ID, return the JSON for the requested record
         else:
+            # Otherwise if there is an ID, return the JSON for the requested record
             try:
                 record = self.db.getonematching(self.resource, id=id)
                 if not record:
@@ -45,34 +42,30 @@ class APIViewSet( MethodView ):
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e), 500
 
-    # PUT method will update the record with the supplied JSON info
     def put( self, id ):
+        """ PUT method updates the record with the supplied JSON info """
         try:
-            # Capture HTTP request data (JSON) and load into an update dictionary
             update_dict = OrderedDict( json.loads( request.data ) )
-            # Ensure that if the id exists in update_dict, it matches the id provided in URL
             if self.pri_key in update_dict:
+                # Ensure that if the id exists in update_dict, it matches the id provided in URL
                 if id != int( update_dict[self.pri_key] ):
                     return 'Error: ID does not match in body and URL', 500
-            # If the id is not in update_dict, add it
             else:
+                # If the id is not in update_dict, add it
                 update_dict['id'] = id
-
             self.db.updateonematching( self.resource, update_dict )
             self.db.commit()
-
             return 'Successfully updated resource', 201
-
         except Exception as e:
             return 'Unsuccessful. Error:\n' + str(e), 500
 
-    # DELETE method will delete the record with the matching id
     def delete( self, id ):
+        """ DELETE method deletes the record with the matching id """
         self.db.deletematching(self.resource, id=id)
         return 'Successfully deleted resource', 201
 
-    # POST method will create a record with the supplied JSON info
     def post( self ):
+        """ POST method creates a record with the supplied JSON info """
         try:
             insert_dict = OrderedDict( request.get_json() if request.get_json() is not None else request.form)
 
@@ -112,8 +105,8 @@ def handlefiles(files, resource, pkey):
         filepaths_dict[column] = filepath
     return filepaths_dict
 
-# Create a custom API with standard HTTP methods for GET, POST, PUT, and DELETE
 def create_api( server, resource_url, table, db):
+    """Create a custom API with standard HTTP methods for GET, POST, PUT, and DELETE """
     # TODO: provide functionality to check if the table exists in the database, and create it
     #       if it has not been made. An optional parameter should exist that enables this feature,
     #       so that the default functionality is not to create tables (in case of typos, etc).
