@@ -5,5 +5,5 @@ virtualenv:
 	test -d env || virtualenv env
 	env/bin/pip install -Ur requirements.txt
 
-server:
+server: virtualenv
 	env/bin/python src/inventory_app.py
