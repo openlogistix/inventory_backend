@@ -61,19 +61,14 @@ class APIViewSet( MethodView ):
             self.db.updateonematching( self.resource, update_dict )
             self.db.commit()
 
-            return 'Successfully updated resource with following SQL command:\n' + self.db.cursor.mogrify( sql, update_dict ), 201
+            return 'Successfully updated resource', 201
 
         except Exception as e:
             return 'Unsuccessful. Error:\n' + str(e), 500
 
     # DELETE method will delete the record with the matching id
     def delete( self, id ):
-
-        # Execute and commit SQL command
-        sql = 'DELETE FROM ' + self.resource + ' WHERE id = %s'
-        self.db.cursor.execute(sql, (id,) )
-        self.db.commit()
-
+        self.db.deletematching(self.resource, id=id)
         return 'Successfully deleted resource', 201
 
     # POST method will create a record with the supplied JSON info

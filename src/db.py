@@ -19,10 +19,10 @@ class DB(object):
 
     def getallmatching(self, table, **predicates):
         where = ""
-        query = "SELECT * FROM {t} WHERE ".format(t=table)
+        query = "SELECT * FROM {t}".format(t=table)
         if predicates:
             predicatefmt = "{col} = %({val})s"
-            where = " AND ".join(predicatefmt.format(col=k, val=k) for k in predicates)
+            where = " WHERE "+" AND ".join(predicatefmt.format(col=k, val=k) for k in predicates)
         self.cursor.execute(query+where, predicates)
         results = self.cursor.fetchall()
         return results
@@ -33,9 +33,16 @@ class DB(object):
         where = "WHERE id = %(id)s"
         cols = ", ".join(columnfmt.format(col=k, val=k) for k in columns)
         query = " ".join([query, cols, where])
-        print query
-        print columns
         self.cursor.execute(query, columns)
+        self.commit()
+
+    def deletematching(self, table, **predicates):
+        where = ""
+        query = "DELETE FROM {t}".format(t=table)
+        if predicates:
+            predicatefmt = "{col} = %({val})s"
+            where = " WHERE "+" AND ".join(predicatefmt.format(col=k, val=k) for k in predicates)
+        self.cursor.execute(query+where, predicates)
         self.commit()
 
     def commit(self):
