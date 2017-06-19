@@ -3,10 +3,10 @@ Contains the APIViewSet class and create_api function for the automatic generati
 of a RESTful web API.
 
 """
-import os
-import os.path
 import json
 from collections import OrderedDict
+
+from attachments import handlefiles
 
 from flask import jsonify, request, json
 from flask.views import MethodView
@@ -45,15 +45,15 @@ class APIViewSet( MethodView ):
     def put( self, id ):
         """ PUT method updates the record with the supplied JSON info """
         try:
-            update_dict = OrderedDict( json.loads( request.data ) )
-            if self.pri_key in update_dict:
-                # Ensure that if the id exists in update_dict, it matches the id provided in URL
-                if id != int( update_dict[self.pri_key] ):
+            data = OrderedDict( json.loads( request.data ) )
+            if self.pri_key in data:
+                # Ensure that if the id exists in data, it matches the id provided in URL
+                if id != int( data[self.pri_key] ):
                     return 'Error: ID does not match in body and URL', 500
             else:
-                # If the id is not in update_dict, add it
-                update_dict['id'] = id
-            self.db.updateonematching( self.resource, update_dict )
+                # If the id is not in data, add it
+                data['id'] = id
+            self.db.updateonematching( self.resource, data )
             self.db.commit()
             return 'Successfully updated resource', 201
         except Exception as e:
@@ -67,11 +67,10 @@ class APIViewSet( MethodView ):
     def post( self ):
         """ POST method creates a record with the supplied JSON info """
         try:
-            insert_dict = OrderedDict( request.get_json() if request.get_json() is not None else request.form)
-
-            self.db.insert(self.resource, **insert_dict)
+            data = OrderedDict( request.get_json() if request.get_json() is not None else request.form)
+            self.db.insert(self.resource, **data)
             if request.files:
-                id = self.db.getonematching(self.resource, **insert_dict)[0]
+                id = self.db.getonematching(self.resource, **data)[0]
                 # Save any files to disk
                 columntofilename = handlefiles(request.files, self.resource, id)
                 self.db.updateonematching(self.resource, id=id, **columntofilename)
@@ -81,29 +80,6 @@ class APIViewSet( MethodView ):
             raise
             #return 'Unsuccessful. Error:\n' + str(e)
 
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
-STATICFILEPATH = "/var/www/openlogistix/static"
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def getext(filename):
-    return filename.rsplit(".", 1)[1].lower()
-
-def handlefiles(files, resource, pkey):
-    """ Save the files out of a request to a static file directory and returns a dict with a mapping of the files to
-        their location on disk. """
-    filepaths_dict = {}
-    basedir = os.path.join(STATICFILEPATH, resource)
-    if not os.path.isdir(basedir):
-        os.mkdir(basedir)
-    for column, file in files.items():
-        ext = getext(file.filename)
-        filepath = os.path.join(basedir, "{pkey}_{column}.{ext}".format(pkey=pkey,column=column,ext=ext))
-        #Call to the requests file object save() method to save file to disk
-        file.save(filepath)
-        filepaths_dict[column] = filepath
-    return filepaths_dict
 
 def create_api( server, resource_url, table, db):
     """Create a custom API with standard HTTP methods for GET, POST, PUT, and DELETE """
