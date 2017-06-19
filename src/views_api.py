@@ -14,12 +14,11 @@ from flask.views import MethodView
 class APIViewSet( MethodView ):
 
     # Constructor has parameters to define the resource
-    def __init__( self, resource, table, connection, cursor ):
+    def __init__( self, resource, table, db ):
 
         # Store input parameter values into instance member variables
         self.resource   = resource
-        self.connection = connection
-        self.cursor     = cursor
+        self.db         = db
         self.table      = table
 
         # Primary key is the first column of the table
@@ -32,11 +31,11 @@ class APIViewSet( MethodView ):
         if id is None:
             try:
                 # Perform SQL query for all records
-                self.cursor.execute('SELECT * FROM ' + self.resource)
+                self.db.cursor.execute('SELECT * FROM ' + self.resource)
 
                 # Create list of dictionaries for JSON output
                 records = []
-                for record in self.cursor.fetchall():
+                for record in self.db.cursor.fetchall():
                     records.append( OrderedDict( zip( self.table.keys(), record ) ) )
 
                 return jsonify( records )
@@ -48,9 +47,9 @@ class APIViewSet( MethodView ):
         else:
             try:
                 # Perform SQL query for a given record
-                self.cursor.execute('SELECT * FROM ' + self.resource + ' WHERE ' + \
+                self.db.cursor.execute('SELECT * FROM ' + self.resource + ' WHERE ' + \
                     self.pri_key + ' = %s', (str(id),) )
-                record = self.cursor.fetchone()
+                record = self.db.cursor.fetchone()
 
                 if not record:
                     return 'Unsuccessful. No resource with ' + self.pri_key + ' %d found.' % id, 404
@@ -77,10 +76,10 @@ class APIViewSet( MethodView ):
 
             # Execute and commit SQL command
             sql = 'UPDATE ' + self.resource + '\nSET\n' + ',\n'.join([x + ' = %(' + x + ')s' for x in update_dict.keys()]) + '\nWHERE ' + self.pri_key + ' = %(id)s;'
-            self.cursor.execute( sql, update_dict )
-            self.connection.commit()
+            self.db.cursor.execute( sql, update_dict )
+            self.db.commit()
 
-            return 'Successfully updated resource with following SQL command:\n' + self.cursor.mogrify( sql, update_dict ), 201
+            return 'Successfully updated resource with following SQL command:\n' + self.db.cursor.mogrify( sql, update_dict ), 201
 
         except Exception as e:
             return 'Unsuccessful. Error:\n' + str(e), 500
@@ -90,8 +89,8 @@ class APIViewSet( MethodView ):
 
         # Execute and commit SQL command
         sql = 'DELETE FROM ' + self.resource + ' WHERE id = %s'
-        self.cursor.execute(sql, (id,) )
-        self.connection.commit()
+        self.db.cursor.execute(sql, (id,) )
+        self.db.commit()
 
         return 'Successfully deleted resource', 201
 
@@ -103,21 +102,21 @@ class APIViewSet( MethodView ):
             # Execute and commit SQL command
             sql ='INSERT INTO ' + self.resource + '\n(' + ', '.join(insert_dict.keys()) + ')\nVALUES\n(' + \
                 ', '.join( ['%(' + x + ')s' for x in insert_dict.keys()] )  + ');'
-            self.cursor.execute( sql, insert_dict )
+            self.db.cursor.execute( sql, insert_dict )
             if request.files:
                 # Get primary key for last inserted element
                 valuegetter = "SELECT currval('{resource}_id_seq');".format(resource=self.resource)
-                self.cursor.execute(valuegetter)
-                primarykey = self.cursor.fetchone()[0]
+                self.db.cursor.execute(valuegetter)
+                primarykey = self.db.cursor.fetchone()[0]
 
                 # Save any files to disk
                 columntofilename = handlefiles(request.files, self.resource, primarykey)
                 sql = "UPDATE {table} SET ".format(table=self.resource) + \
                       ", ".join("{col} = '{val}'".format(col=name, val=filepath) for name, filepath in columntofilename.items()) + \
                       "WHERE id = {key};".format(key=primarykey)
-                self.cursor.execute(sql)
-            self.connection.commit()
-            return 'Successfully created resource with following SQL command:\n' + self.cursor.mogrify( sql, insert_dict ), 201
+                self.db.cursor.execute(sql)
+            self.db.commit()
+            return 'Successfully created resource with following SQL command:\n' + self.db.cursor.mogrify( sql, insert_dict ), 201
 
         except Exception as e:
             raise
@@ -148,7 +147,7 @@ def handlefiles(files, resource, pkey):
     return filepaths_dict
 
 # Create a custom API with standard HTTP methods for GET, POST, PUT, and DELETE
-def create_api( server, resource_url, table, conn, curs ):
+def create_api( server, resource_url, table, db):
     # TODO: provide functionality to check if the table exists in the database, and create it
     #       if it has not been made. An optional parameter should exist that enables this feature,
     #       so that the default functionality is not to create tables (in case of typos, etc).
@@ -158,7 +157,7 @@ def create_api( server, resource_url, table, conn, curs ):
     assert len(resource) > 2, 'Resource URL should be in the form: /path/from/host/to/resource/'
 
     # Create the views for the API, routing the URLs as needed to the appropriate methods
-    resource_views = APIViewSet.as_view( resource + '_api', resource, table, conn, curs )
+    resource_views = APIViewSet.as_view( resource + '_api', resource, table, db )
     server.add_url_rule( resource_url, defaults={ 'id':None }, view_func=resource_views, methods=['GET'] )
     server.add_url_rule( resource_url, view_func=resource_views, methods=['POST'] )
     server.add_url_rule( resource_url + '<int:id>', view_func=resource_views, methods=['GET','PUT','DELETE'] )
