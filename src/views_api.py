@@ -30,12 +30,8 @@ class APIViewSet( MethodView ):
         # If no id is given, return the JSON for all records in the database
         if id is None:
             try:
-                # Perform SQL query for all records
-                self.db.cursor.execute('SELECT * FROM ' + self.resource)
-
-                # Create list of dictionaries for JSON output
-                records = []
-                for record in self.db.cursor.fetchall():
+                records = self.db.getallmatching(self.resource)
+                for record in records:
                     records.append( OrderedDict( zip( self.table.keys(), record ) ) )
 
                 return jsonify( records )
@@ -47,9 +43,7 @@ class APIViewSet( MethodView ):
         else:
             try:
                 # Perform SQL query for a given record
-                self.db.cursor.execute('SELECT * FROM ' + self.resource + ' WHERE ' + \
-                    self.pri_key + ' = %s', (str(id),) )
-                record = self.db.cursor.fetchone()
+                record = self.db.getonematching(self.resource, id=id)
 
                 if not record:
                     return 'Unsuccessful. No resource with ' + self.pri_key + ' %d found.' % id, 404
