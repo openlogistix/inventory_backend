@@ -26,40 +26,30 @@ class APIViewSet( MethodView ):
 
     # GET method will return the JSON for the specified resource(s)
     def get( self, id ):
-
         # If no id is given, return the JSON for all records in the database
         if id is None:
             try:
                 records = self.db.getallmatching(self.resource)
                 for record in records:
                     records.append( OrderedDict( zip( self.table.keys(), record ) ) )
-
                 return jsonify( records )
-
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e), 500
-
         # Otherwise if there is an ID, return the JSON for the requested record
         else:
             try:
-                # Perform SQL query for a given record
                 record = self.db.getonematching(self.resource, id=id)
-
                 if not record:
                     return 'Unsuccessful. No resource with ' + self.pri_key + ' %d found.' % id, 404
-
                 return jsonify( OrderedDict( zip( self.table.keys(), record ) ) )
-
             except Exception as e:
                 return 'Unsuccessful. Error:\n' + str(e), 500
 
     # PUT method will update the record with the supplied JSON info
     def put( self, id ):
-
         try:
             # Capture HTTP request data (JSON) and load into an update dictionary
             update_dict = OrderedDict( json.loads( request.data ) )
-
             # Ensure that if the id exists in update_dict, it matches the id provided in URL
             if self.pri_key in update_dict:
                 if id != int( update_dict[self.pri_key] ):
@@ -68,9 +58,7 @@ class APIViewSet( MethodView ):
             else:
                 update_dict['id'] = id
 
-            # Execute and commit SQL command
-            sql = 'UPDATE ' + self.resource + '\nSET\n' + ',\n'.join([x + ' = %(' + x + ')s' for x in update_dict.keys()]) + '\nWHERE ' + self.pri_key + ' = %(id)s;'
-            self.db.cursor.execute( sql, update_dict )
+            self.db.updateonematching( self.resource, update_dict )
             self.db.commit()
 
             return 'Successfully updated resource with following SQL command:\n' + self.db.cursor.mogrify( sql, update_dict ), 201
