@@ -1,3 +1,4 @@
 flask
 psycopg2
 flake8
+Flask-User<0.7
