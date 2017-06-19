@@ -18,9 +18,11 @@ class DB(object):
         return results
 
     def getallmatching(self, table, **predicates):
+        where = ""
         query = "SELECT * FROM {t} WHERE ".format(t=table)
-        predicatefmt = "{col} = %({val})s"
-        where = " AND ".join(predicatefmt.format(col=k, val=k) for k in predicates)
+        if predicates:
+            predicatefmt = "{col} = %({val})s"
+            where = " AND ".join(predicatefmt.format(col=k, val=k) for k in predicates)
         self.cursor.execute(query+where, predicates)
         results = self.cursor.fetchall()
         return results
