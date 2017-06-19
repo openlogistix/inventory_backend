@@ -8,7 +8,7 @@ import os.path
 import json
 from collections import OrderedDict
 
-from flask import jsonify, request, json
+from flask import jsonify, request, json, current_app
 from flask.views import MethodView
 # Class APIViewSet creates a set of views for HTTP requests and routes them to a resource endpoint
 class APIViewSet( MethodView ):
@@ -89,7 +89,6 @@ class APIViewSet( MethodView ):
             #return 'Unsuccessful. Error:\n' + str(e)
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
-STATICFILEPATH = "/var/www/openlogistix/static"
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -101,6 +100,7 @@ def handlefiles(files, resource, pkey):
     """ Save the files out of a request to a static file directory and returns a dict with a mapping of the files to
         their location on disk. """
     filepaths_dict = {}
+    STATICFILEPATH = current_app.config['STATICFILEPATH']
     basedir = os.path.join(STATICFILEPATH, resource)
     if not os.path.isdir(basedir):
         os.mkdir(basedir)

@@ -8,6 +8,8 @@ from db import DB
 from flask.views import MethodView
 from flask import Flask, jsonify, request, json, send_from_directory, render_template
 
+import os
+
 from views_api import create_api
 
 #  _________________________________________________________________________________________
@@ -26,6 +28,12 @@ class InventoryAPI(Flask):
     def __init__(self, name):
         # Set up Flask server
         Flask.__init__(self, name)
+
+        if 'INVENTORY_SETTINGS' in os.environ:
+            self.config.from_envvar('INVENTORY_SETTINGS', silent=True)
+        else:
+            self.config.from_object('default_config')
+        print(self.config)
 
         db = DB()
         # Define item table column names and data types
