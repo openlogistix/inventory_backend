@@ -61,7 +61,7 @@
                  <a href="/org/{{ org.id }}/inventory/{{ item.qr_id }}">{{ item.name }}</a>
                 </td>
                 <td class="mdl-data-table__cell--non-numeric">{{ item.location }}</td>
-                <td class="mdl-data-table__cell--non-numeric"><a href="/item/{{ item.qr_id }}"><img src="/static/item/{{ item.image.rsplit("/",1)[1] }}" height=300></a></td>
+                <td class="mdl-data-table__cell--non-numeric"><a href="/org/{{ org.id }}/inventory/{{ item.qr_id }}"><img src="/static/item/{{ item.image.rsplit("/",1)[1] }}" height=300></a></td>
                 <td class="mdl-data-table__cell--non-numeric"><div class="description-wrapper">{{ item.description.decode('utf-8')}}</div></td>
               </tr>
 
