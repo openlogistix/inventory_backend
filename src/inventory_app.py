@@ -33,7 +33,6 @@ class InventoryApp(Flask):
             self.config.from_envvar('INVENTORY_SETTINGS', silent=True)
         else:
             self.config.from_object('default_config')
-        print(self.config)
 
         db = DB()
         # Define item table column names and data types
