@@ -27,5 +27,16 @@ class DB(object):
         results = self.cursor.fetchall()
         return results
 
+    def updateonematching(self, table, **columns):
+        query = "UPDATE {t} SET".format(t=table)
+        columnfmt = "{col} = %({val})s"
+        where = "WHERE id = %(id)s"
+        cols = ", ".join(columnfmt.format(col=k, val=k) for k in columns)
+        query = " ".join([query, cols, where])
+        print query
+        print columns
+        self.cursor.execute(query, columns)
+        self.commit()
+
     def commit(self):
         self.conn.commit()
