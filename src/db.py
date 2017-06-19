@@ -45,5 +45,12 @@ class DB(object):
         self.cursor.execute(query+where, predicates)
         self.commit()
 
+    def insert(self, table, **data):
+        insert = "INSERT INTO {t}".format(t=table)
+        columns = "({c})".format(c=", ".join(data))
+        values = "VALUES ({v})".format(v=", ".join("%({col})s".format(col=c) for c in data))
+        self.cursor.execute(" ".join((insert, columns, values)), data)
+        self.commit()
+
     def commit(self):
         self.conn.commit()
