@@ -40,7 +40,7 @@ class InventoryAPI(Flask):
         def inventoryobject(org_id, qr_id):
             """ The landing page from a given QR code. Looks up the given QR id in the db,
                 renders it if present, otherwise asks for input. """
-            org = db.getonematching("org", id=org_id)[0]
+            org = Org(*db.getonematching("org", id=org_id))
             result = db.getonematching("item", qr_id=qr_id)
             if result:
                 object_data = Item(*result)
@@ -51,7 +51,7 @@ class InventoryAPI(Flask):
 
         @self.route('/org/<int:org_id>/inventory/')
         def inventory(org_id):
-            org = db.getonematching("org", id=org_id)[0]
+            org = Org(*db.getonematching("org", id=org_id))
             results = db.getallmatching("item", org_id=org_id)
             items = [Item(*row) for row in results]
             return render_template('inventory.html', inventory=items, org=org), 200
