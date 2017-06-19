@@ -3,7 +3,7 @@
 ./ Decide name
 ./ get URL
 ./ fork & 
-- modify code to allow multiple users
+./ modify code to allow multiple users
 - orgs/users
 - authorization
 - deploy with uwsgi
@@ -39,8 +39,14 @@ table schemes:
  description | text    |
 
 "org" table
-
-id primary key,
-name text,
-itemlimit int,
+                           Table "public.org"
+  Column   |  Type   |                    Modifiers
+-----------+---------+--------------------------------------------------
+ id        | integer | not null default nextval('org_id_seq'::regclass)
+ name      | text    |
+ itemlimit | integer |
+Indexes:
+    "org_pkey" PRIMARY KEY, btree (id)
+Referenced by:
+    TABLE "item" CONSTRAINT "org_constraint" FOREIGN KEY (org_id) REFERENCES org(id)
 
