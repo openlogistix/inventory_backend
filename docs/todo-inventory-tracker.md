@@ -1,16 +1,18 @@
-2017-06-13
-==========
-./ Decide name
-./ get URL
-./ fork & 
-./ modify code to allow multiple users
-- orgs/users
-- authorization
-- deploy with uwsgi
-- get new stickers printed
-- add editing
-- add location via GPS for input
-- gmaps integration showing location of objects
+### Features:
+- [x] Decide name
+- [x] get URL
+- [x] fork &  
+- [x] modify code to allow multiple users
+- [ ] orgs/users
+- [ ] authorization
+- [ ] deploy with uwsgi
+- [ ] get new stickers printed
+- [ ] add editing
+- [ ] add location via GPS for input
+- [ ] gmaps integration showing location of objects
+
+### Bugs:
+[ ] Image upload doesn't work
 
 openlogistix.io
 
