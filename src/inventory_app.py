@@ -41,7 +41,7 @@ class InventoryAPI(Flask):
             """ The landing page from a given QR code. Looks up the given QR id in the db,
                 renders it if present, otherwise asks for input. """
             org = Org(*db.getonematching("org", id=org_id))
-            result = db.getonematching("item", qr_id=qr_id)
+            result = db.getonematching("item", org_id=org_id, qr_id=qr_id)
             if result:
                 object_data = Item(*result)
                 return render_template('objectview.html', item=object_data, org=org), 200
