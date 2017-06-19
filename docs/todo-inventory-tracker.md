@@ -12,22 +12,23 @@
 - [ ] gmaps integration showing location of objects
 
 ### Bugs:
-[ ] Image upload doesn't work
+- [ ] Image upload doesn't work
 
 openlogistix.io
 
 url scheme:
+```
  _________________________________________________________________________________________
 | Function            | URL                                                               |
 |---------------------+-------------------------------------------------------------------|
 | org admin           | https://openlogistix.io/org/<int:org_id>/                         |
 | list inventory      | https://openlogistix.io/org/<int:org_id>/inventory/               |
 | create/display/edit | https://openlogistix.io/org/<int:org_id>/inventory/<int:obj_id>   |
-
+```
 table schemes:
 
 "item" table
-
+```
                             Table "public.item"
    Column    |  Type   |                     Modifiers
 -------------+---------+---------------------------------------------------
@@ -51,4 +52,4 @@ Indexes:
     "org_pkey" PRIMARY KEY, btree (id)
 Referenced by:
     TABLE "item" CONSTRAINT "org_constraint" FOREIGN KEY (org_id) REFERENCES org(id)
-
+```
