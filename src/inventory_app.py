@@ -21,7 +21,7 @@ from views_api import create_api
 Item = namedtuple("Item", ["id","org_id", "qr_id", "name", "image", "location", "tags", "description"])
 Org =  namedtuple("Org", ["id", "name", "itemlimit"])
 
-class InventoryAPI(Flask):
+class InventoryApp(Flask):
 
     def __init__(self, name):
         # Set up Flask server
@@ -61,6 +61,6 @@ debugconfig = {  'host':'0.0.0.0',
             'port':1870,
             'debug':True }
 
-application = InventoryAPI(__name__)
+application = InventoryApp(__name__)
 if __name__ == '__main__':
     application.run(**debugconfig)
