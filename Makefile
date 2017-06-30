@@ -1,5 +1,11 @@
 help:
-	@echo hi
+	@echo 'The OpenLogistix Inventory Backend'
+	@echo
+	@echo 'Targets:'
+	@echo
+	@echo '  virtualenv:	create virtualenv (./env), then pip install from requirements.txt'
+	@echo '  server:	run a development server'
+	@echo
 
 virtualenv:
 	test -d env || virtualenv env
