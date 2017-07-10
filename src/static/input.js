@@ -33,10 +33,8 @@ function resizeImage() {
     // Create a file reader
     var reader = new FileReader();
     // Set the image once loaded into file reader
-    reader.onload = function(e)
-    {
-        img.src = e.target.result;
-        console.log("We doin it!");
+    img.onload = function() {
+        console.log("We doin it! :D");
         var canvas = document.createElement("canvas");
         //var canvas = $("<canvas>", {"id":"testing"})[0];
         var ctx = canvas.getContext("2d");
@@ -66,6 +64,10 @@ function resizeImage() {
         dataurl = canvas.toDataURL("image/png");
         $("#image")[0].src = dataurl;
         console.log("We done did it!");
+    }
+    reader.onload = function(e)
+    {
+        img.src = e.target.result;
     }
     // Load files into file reader
     reader.readAsDataURL(file);
