@@ -9,7 +9,7 @@ db = SQLAlchemy()
 def create_app():
     app = Flask(__name__)
     app.config.from_pyfile('settings.py')
-    app.config.from_envvar('INVENTORY_SETTINGS')
+    app.config.from_envvar('INVENTORY_SETTINGS', silent=True)
 
     db.init_app(app)
 
@@ -25,4 +25,11 @@ def create_app():
         if item:
             return render_template('objectview.html', item=item, org=org)
         return render_template('input.html', qr_id=qr_id, org=org)
+
+    @app.route('/org/<int:org_id>/inventory/')
+    def inventory(org_id):
+        org = Org.query.get_or_404(org_id)
+        items = Item.query.all()
+        return render_template('inventory.html', inventory=items, org=org), 200
+
     return app
