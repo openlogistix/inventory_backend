@@ -12,4 +12,4 @@ virtualenv:
 	env/bin/pip install -Ur requirements.txt
 
 server: virtualenv
-	env/bin/python src/inventory_app.py
+	env/bin/python manage.py runserver
