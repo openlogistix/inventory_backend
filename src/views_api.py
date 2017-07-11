@@ -19,7 +19,7 @@ class ModelAPI(MethodView):
 
     def get(self, id):
         instance = self.model.query.get_or_404(id)
-        return jsonify(instance.as_dict()), 404
+        return jsonify(instance.as_dict()), 200
 
     def put(self, id):
         instance = self.model.query.get_or_404(id)
