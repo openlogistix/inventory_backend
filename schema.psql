@@ -42,8 +42,8 @@ CREATE TABLE item (
     location text,
     tags json,
     description text,
-    latitude real,
-    longitude real
+    latitude numeric,
+    longitude numeric
 );
 
 
