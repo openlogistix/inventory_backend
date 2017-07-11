@@ -80,6 +80,7 @@ dl-textfield--floating-label.is-focused .mdl-textfield__label, .mdl-textfield--f
               <h2 class="mdl-typography--display-4">Item entry</h2>
               <br>
               <form id="imageform" enctype="multipart/form-data" method="post" action="/api/v1/item/">
+                <input type="hidden" name="org_id" value="{{ org.id }}">
                 <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
                   <input class="mdl-textfield__input" type="text" id="name" name="name">
                   <label class="mdl-textfield__label" for="name">Name</label>
