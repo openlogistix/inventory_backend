@@ -21,6 +21,9 @@ class Item(db.Model, ModelMixin):
     tags = db.Column(db.JSON)
     description = db.Column(db.String)
 
+    longitude = db.Column(db.Float)
+    latitude = db.Column(db.Float)
+
 class Org(db.Model, ModelMixin):
     __tablename__ = 'org'
 
