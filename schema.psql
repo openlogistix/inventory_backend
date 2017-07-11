@@ -3,6 +3,7 @@
 --
 
 SET statement_timeout = 0;
+SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
@@ -40,11 +41,13 @@ CREATE TABLE item (
     image text,
     location text,
     tags json,
-    description text
+    description text,
+    latitude real,
+    longitude real
 );
 
 
-ALTER TABLE public.item OWNER TO openlogistix;
+ALTER TABLE item OWNER TO openlogistix;
 
 --
 -- Name: item_id_seq; Type: SEQUENCE; Schema: public; Owner: openlogistix
@@ -58,7 +61,7 @@ CREATE SEQUENCE item_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.item_id_seq OWNER TO openlogistix;
+ALTER TABLE item_id_seq OWNER TO openlogistix;
 
 --
 -- Name: item_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: openlogistix
@@ -78,7 +81,7 @@ CREATE TABLE org (
 );
 
 
-ALTER TABLE public.org OWNER TO openlogistix;
+ALTER TABLE org OWNER TO openlogistix;
 
 --
 -- Name: org_id_seq; Type: SEQUENCE; Schema: public; Owner: openlogistix
@@ -92,13 +95,52 @@ CREATE SEQUENCE org_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.org_id_seq OWNER TO openlogistix;
+ALTER TABLE org_id_seq OWNER TO openlogistix;
 
 --
 -- Name: org_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: openlogistix
 --
 
 ALTER SEQUENCE org_id_seq OWNED BY org.id;
+
+
+--
+-- Name: user; Type: TABLE; Schema: public; Owner: openlogistix; Tablespace: 
+--
+
+CREATE TABLE "user" (
+    id integer NOT NULL,
+    username character varying(50) NOT NULL,
+    password character varying(255) DEFAULT ''::character varying NOT NULL,
+    email character varying(255) NOT NULL,
+    confirmed_at timestamp without time zone,
+    is_active boolean DEFAULT false NOT NULL,
+    first_name character varying(100) DEFAULT ''::character varying NOT NULL,
+    last_name character varying(100) DEFAULT ''::character varying NOT NULL
+);
+
+
+ALTER TABLE "user" OWNER TO openlogistix;
+
+--
+-- Name: user_id_seq; Type: SEQUENCE; Schema: public; Owner: openlogistix
+--
+
+CREATE SEQUENCE user_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE user_id_seq OWNER TO openlogistix;
+
+--
+-- Name: user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: openlogistix
+--
+
+ALTER SEQUENCE user_id_seq OWNED BY "user".id;
 
 
 --
@@ -116,6 +158,13 @@ ALTER TABLE ONLY org ALTER COLUMN id SET DEFAULT nextval('org_id_seq'::regclass)
 
 
 --
+-- Name: id; Type: DEFAULT; Schema: public; Owner: openlogistix
+--
+
+ALTER TABLE ONLY "user" ALTER COLUMN id SET DEFAULT nextval('user_id_seq'::regclass);
+
+
+--
 -- Name: item_pkey; Type: CONSTRAINT; Schema: public; Owner: openlogistix; Tablespace: 
 --
 
@@ -129,6 +178,30 @@ ALTER TABLE ONLY item
 
 ALTER TABLE ONLY org
     ADD CONSTRAINT org_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_email_key; Type: CONSTRAINT; Schema: public; Owner: openlogistix; Tablespace: 
+--
+
+ALTER TABLE ONLY "user"
+    ADD CONSTRAINT user_email_key UNIQUE (email);
+
+
+--
+-- Name: user_pkey; Type: CONSTRAINT; Schema: public; Owner: openlogistix; Tablespace: 
+--
+
+ALTER TABLE ONLY "user"
+    ADD CONSTRAINT user_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_username_key; Type: CONSTRAINT; Schema: public; Owner: openlogistix; Tablespace: 
+--
+
+ALTER TABLE ONLY "user"
+    ADD CONSTRAINT user_username_key UNIQUE (username);
 
 
 --
